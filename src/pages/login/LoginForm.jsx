@@ -2,16 +2,18 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./styles.module.css";
 import { login } from "../../services/authService";
+import RegisterModal from "./RegisterModal"; // Importa o modal de registro
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false); // Controla visibilidade do modal
 
   const navigate = useNavigate();
 
-  // Etapa 6: Redirecionar automaticamente se já estiver logado
+  // Redireciona se já estiver logado
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -78,9 +80,14 @@ const LoginForm = () => {
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
-          <Link to="/register" className={styles.registerButton}>
+
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className={styles.registerButton}
+          >
             Registrar
-          </Link>
+          </button>
         </div>
 
         <div className={styles.forgotPassword}>
@@ -89,6 +96,9 @@ const LoginForm = () => {
           </Link>
         </div>
       </form>
+
+      {/* Modal de registro exibido condicionalmente */}
+      {showModal && <RegisterModal onClose={() => setShowModal(false)} />}
     </div>
   );
 };
