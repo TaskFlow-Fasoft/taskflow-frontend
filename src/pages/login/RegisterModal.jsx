@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "./registerModal.module.css";
+import styles from "./styles/registerModal.module.css";
 import { register } from "../../services/registerService";
 
 const RegisterModal = ({ onClose }) => {
@@ -106,4 +106,3 @@ const RegisterModal = ({ onClose }) => {
 };
 
 export default RegisterModal;
-s

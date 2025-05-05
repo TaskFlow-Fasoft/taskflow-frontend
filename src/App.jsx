@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Login from './pages/login';
-import Dashboard from './pages/dashboard/dashboard';
-import ProtectedRoute from './components/ProtectedRoute'; // ⬅️ novo import
+import ProtectedRoute from './components/ProtectedRoute';
+import BoardWorkspace from './pages/boards/BoardWorkspace';
 import './App.css';
 
 function App() {
@@ -10,10 +10,10 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route
-        path="/dashboard"
+        path="/boards"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <BoardWorkspace />
           </ProtectedRoute>
         }
       />
