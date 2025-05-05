@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import styles from "./styles/boardWorkspace.module.css";
 import { useNavigate } from "react-router-dom";
 import CreateBoardModal from "./CreateBoardModal";
+import CreateColumnModal from "./CreateColumnModal";
 import RenameBoardModal from "./RenameBoardModal";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { getBoards } from "../../services/boardService";
@@ -13,7 +14,7 @@ import {
   FaPlus,
   FaEllipsisH,
   FaTrashAlt,
-  FaPen
+  FaPen,
 } from "react-icons/fa";
 import LogoIcon from "../../assets/Logo Icone.png";
 
@@ -29,6 +30,7 @@ const BoardWorkspace = () => {
   const [renameIndex, setRenameIndex] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteIndex, setDeleteIndex] = useState(null);
+  const [showCreateColumnModal, setShowCreateColumnModal] = useState(false);
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -118,22 +120,51 @@ const BoardWorkspace = () => {
     navigate("/login");
   };
 
+  const handleCreateColumn = (columnName) => {
+    if (selectedBoardIndex !== null) {
+      const newColumn = {
+        id: Date.now(), // ID único
+        name: columnName,
+        cards: [],
+      };
+      setBoards((prevBoards) => {
+        const updatedBoards = [...prevBoards];
+        updatedBoards[selectedBoardIndex].columns.push(newColumn);
+        return updatedBoards;
+      });
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={`${styles.logo} ${!sidebarOpen ? styles.logoHidden : ''}`}>
-            <img src={LogoIcon} alt="TaskFlow Logo" className={styles.logoImage} />
+          <div
+            className={`${styles.logo} ${
+              !sidebarOpen ? styles.logoHidden : ""
+            }`}
+          >
+            <img
+              src={LogoIcon}
+              alt="TaskFlow Logo"
+              className={styles.logoImage}
+            />
           </div>
           <h1 className={styles.appName}>TaskFlow</h1>
         </div>
 
         <div className={styles.headerCenter}>
-          {selectedBoardIndex !== null ? boards[selectedBoardIndex]?.name : "Nenhum quadro selecionado"}
+          {selectedBoardIndex !== null
+            ? boards[selectedBoardIndex]?.name
+            : "Nenhum quadro selecionado"}
         </div>
 
         <div className={styles.headerRight}>
-          <div ref={userRef} onClick={() => setUserMenuOpen(!userMenuOpen)} style={{ cursor: "pointer" }}>
+          <div
+            ref={userRef}
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            style={{ cursor: "pointer" }}
+          >
             <FaUserCircle size={29} color="#3a86ff" />
           </div>
 
@@ -144,7 +175,9 @@ const BoardWorkspace = () => {
                   <span className={styles.userDisplayName}>{fakeUserName}</span>
                 </div>
                 <div className={styles.menuDivider}></div>
-                <button className={styles.userMenuItem} onClick={handleLogout}>Fazer Logout</button>
+                <button className={styles.userMenuItem} onClick={handleLogout}>
+                  Fazer Logout
+                </button>
               </div>
             </MenuPortal>
           )}
@@ -152,20 +185,43 @@ const BoardWorkspace = () => {
       </header>
 
       <div className={styles.workspaceContainer}>
-        <div className={`${styles.toggleContainer} ${sidebarOpen ? styles.open : styles.closed}`}>
-          <button className={styles.toggleSidebarBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
-            {sidebarOpen ? <FaChevronLeft size={16} /> : <FaChevronRight size={16} />}
+        <div
+          className={`${styles.toggleContainer} ${
+            sidebarOpen ? styles.open : styles.closed
+          }`}
+        >
+          <button
+            className={styles.toggleSidebarBtn}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? (
+              <FaChevronLeft size={16} />
+            ) : (
+              <FaChevronRight size={16} />
+            )}
           </button>
         </div>
 
-        <aside className={`${styles.sidebar} ${!sidebarOpen ? styles.sidebarClosed : ''}`}>
+        <aside
+          className={`${styles.sidebar} ${
+            !sidebarOpen ? styles.sidebarClosed : ""
+          }`}
+        >
           <h3 className={styles.sidebarTitle}>Task Workspace</h3>
           <div className={styles.sidebarSection}>
             <p className={styles.sectionLabel}>Meus Quadros</p>
             <ul className={styles.boardList}>
               {boards.map((board, index) => (
-                <li key={index} className={`${styles.boardItem} ${selectedBoardIndex === index ? styles.activeBoard : ""}`}>
-                  <div className={styles.boardContent} onClick={() => setSelectedBoardIndex(index)}>
+                <li
+                  key={index}
+                  className={`${styles.boardItem} ${
+                    selectedBoardIndex === index ? styles.activeBoard : ""
+                  }`}
+                >
+                  <div
+                    className={styles.boardContent}
+                    onClick={() => setSelectedBoardIndex(index)}
+                  >
                     <span className={styles.pinIcon}>📌</span>
                     {board.name}
                   </div>
@@ -174,16 +230,32 @@ const BoardWorkspace = () => {
                   </div>
                   {activeMenuIndex === index && (
                     <MenuPortal>
-                      <div ref={dropdownRef} className={styles.dropdownMenu} style={{ top: menuPosition.top, left: menuPosition.left, position: "fixed", zIndex: 9999 }}>
-                        <button onClick={() => handleRename(index)}><FaPen size={12} /> Renomear</button>
-                        <button onClick={() => handleDelete(index)}><FaTrashAlt size={12} /> Excluir</button>
+                      <div
+                        ref={dropdownRef}
+                        className={styles.dropdownMenu}
+                        style={{
+                          top: menuPosition.top,
+                          left: menuPosition.left,
+                          position: "fixed",
+                          zIndex: 9999,
+                        }}
+                      >
+                        <button onClick={() => handleRename(index)}>
+                          <FaPen size={12} /> Renomear
+                        </button>
+                        <button onClick={() => handleDelete(index)}>
+                          <FaTrashAlt size={12} /> Excluir
+                        </button>
                       </div>
                     </MenuPortal>
                   )}
                 </li>
               ))}
             </ul>
-            <button className={styles.addBoardBtn} onClick={() => setShowModal(true)}>
+            <button
+              className={styles.addBoardBtn}
+              onClick={() => setShowModal(true)}
+            >
               <FaPlus size={12} style={{ marginRight: "6px" }} />
               Novo Quadro
             </button>
@@ -191,40 +263,81 @@ const BoardWorkspace = () => {
         </aside>
 
         <main className={styles.mainContent}>
-  {loading ? (
-    <p>Carregando quadros...</p>
-  ) : selectedBoardIndex === null ? (
-    <h2>Selecione ou crie um quadro</h2>
-  ) : (
-    <div className={styles.boardView}>
-      <h2 className={styles.boardTitle}>
-        {boards[selectedBoardIndex]?.name}
-      </h2>
+          {loading ? (
+            <p>Carregando quadros...</p>
+          ) : selectedBoardIndex === null ? (
+            <h2>Selecione ou crie um quadro</h2>
+          ) : (
+            <div className={styles.boardView}>
+              <h2 className={styles.boardTitle}>
+                {boards[selectedBoardIndex]?.name}
+              </h2>
 
-      <div className={styles.columnsArea}>
-        {boards[selectedBoardIndex]?.columns?.length > 0 ? (
-          boards[selectedBoardIndex].columns.map((column) => (
-            <div key={column.id} className={styles.column}>
-              <h3 className={styles.columnTitle}>{column.name}</h3>
-              <div className={styles.columnContent}>
-                {/* Aqui você poderá renderizar cards depois */}
-                <span className={styles.placeholder}>Sem cartões</span>
+              <div className={styles.columnsArea}>
+                {boards[selectedBoardIndex]?.columns?.length > 0 ? (
+                  <>
+                    {boards[selectedBoardIndex].columns.map((column) => (
+                      <div key={column.id} className={styles.column}>
+                        <h3 className={styles.columnTitle}>{column.name}</h3>
+                        <div className={styles.columnContent}>
+                          {column.cards?.length > 0 ? (
+                            column.cards.map((card) => (
+                              <div key={card.id} className={styles.card}>
+                                {card.title}
+                              </div>
+                            ))
+                          ) : (
+                            <span className={styles.placeholder}>
+                              Sem cartões
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Botão fixo ao final das colunas */}
+                    <button
+                      className={styles.addColumnStyledBtn}
+                      onClick={() => setShowCreateColumnModal(true)}
+                    >
+                      <FaPlus size={10} style={{ marginRight: "6px" }} />
+                      Adicionar nova lista
+                    </button>
+                  </>
+                ) : (
+                  // Exibir área vazia com o botão centralizado
+                  <div className={styles.emptyBoard}>
+                    <p className={styles.emptyText}>
+                      Este quadro está vazio.{" "}
+                      <em>Comece criando uma coluna.</em>
+                    </p>
+                    <button
+                      className={styles.addColumnStyledBtn}
+                      onClick={() => setShowCreateColumnModal(true)}
+                    >
+                      <FaPlus size={10} style={{ marginRight: "6px" }} />
+                      Adicionar nova lista
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
-          ))
-        ) : (
-          <div className={styles.emptyBoard}>
-            Este quadro está vazio. Comece criando uma coluna.
-          </div>
-        )}
-      </div>
-    </div>
-  )}
-</main>
+          )}
+
+          {showCreateColumnModal && (
+            <CreateColumnModal
+              onClose={() => setShowCreateColumnModal(false)}
+              onCreate={handleCreateColumn}
+            />
+          )}
+        </main>
       </div>
 
       {showModal && (
-        <CreateBoardModal onClose={() => setShowModal(false)} onCreate={handleCreateBoard} />
+        <CreateBoardModal
+          onClose={() => setShowModal(false)}
+          onCreate={handleCreateBoard}
+        />
       )}
 
       {showRenameModal && renameIndex !== null && (
@@ -243,6 +356,13 @@ const BoardWorkspace = () => {
           boardName={boards[deleteIndex]?.name}
           onCancel={() => setShowDeleteModal(false)}
           onConfirm={confirmDeleteBoard}
+        />
+      )}
+
+      {showCreateColumnModal && (
+        <CreateColumnModal
+          onClose={() => setShowCreateColumnModal(false)}
+          onCreate={handleCreateColumn}
         />
       )}
     </div>
