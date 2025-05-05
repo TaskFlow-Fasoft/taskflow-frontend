@@ -1,5 +1,5 @@
 import LoginForm from "./LoginForm";
-import styles from "./styles.module.css";
+import styles from "./styles/styles.module.css";
 import logo from "../../assets/logo.png";
 
 const LoginPage = () => {

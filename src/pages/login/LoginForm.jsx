@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import styles from "./styles.module.css";
+import styles from "./styles/styles.module.css";
 import { login } from "../../services/authService";
 import RegisterModal from "./RegisterModal"; // Importa o modal de registro
 
@@ -17,7 +17,7 @@ const LoginForm = () => {
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      navigate("/dashboard");
+      navigate("/boards");
     }
   }, []);
 
@@ -31,7 +31,7 @@ const LoginForm = () => {
     if (response.success) {
       localStorage.setItem("authToken", response.token);
       localStorage.setItem("userEmail", response.user.email);
-      navigate("/dashboard");
+      navigate("/boards");
     } else {
       setErrorMsg(response.message || "Falha na autenticação.");
     }
