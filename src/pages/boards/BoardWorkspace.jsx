@@ -66,27 +66,26 @@ const BoardWorkspace = () => {
     const fetchBoards = async () => {
       const data = await getBoards();
   
-      const normalize = (input) =>
-        input.map((board) => ({
-          ...board,
-          id: String(board.id),
-          columns: (board.columns || []).map((column) => ({
-            ...column,
-            id: String(column.id),
-            cards: (column.cards || []).map((card) => ({
-              ...card,
-              id: String(card.id),
-            })),
+      // Normaliza todos os IDs para string, independentemente do tipo original
+      const normalizedBoards = data.map((board) => ({
+        ...board,
+        id: String(board.id), // Garante que o ID do board é string
+        columns: (board.columns || []).map((column) => ({
+          ...column,
+          id: String(column.id), // Garante que o ID da coluna é string
+          cards: (column.cards || []).map((card) => ({
+            ...card,
+            id: String(card.id), // Garante que o ID do card é string
           })),
-        }));
+        })),
+      }));
   
-      const normalizedBoards = normalize(data);
       setBoards(normalizedBoards);
       setLoading(false);
     };
   
     fetchBoards();
-  }, []);  
+  }, []);
   
   useEffect(() => {
     const handleClickOutside = (event) => {
