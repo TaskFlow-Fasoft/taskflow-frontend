@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styles from "./styles/createBoardModal.module.css";
 
 const CreateBoardModal = ({ onClose, onCreate }) => {
@@ -7,21 +7,14 @@ const CreateBoardModal = ({ onClose, onCreate }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-
-    onCreate({ name: name.trim() });
+  
+    // Criar o novo quadro com colunas vazias
+    onCreate({ 
+      name: name.trim(),
+      columns: [] // Adicionando uma lista de colunas vazias para o quadro
+    });
     onClose(); // Fecha após criar
   };
-
-  // 🔑 Suporte à tecla ESC
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
 
   return (
     <div className={styles.modalOverlay}>
