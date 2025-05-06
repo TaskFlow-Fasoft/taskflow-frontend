@@ -4,8 +4,11 @@ import { useNavigate } from "react-router-dom";
 import CreateBoardModal from "./CreateBoardModal";
 import CreateColumnModal from "./CreateColumnModal";
 import RenameBoardModal from "./RenameBoardModal";
+import { createCard } from "../../services/cardService";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import RenameColumnModal from "./RenameColumnModal";
+import DeleteCardConfirmModal from "./DeleteCardConfirmModal";
+import CreateCardModal from "./CreateCardModal";
 import DeleteColumnConfirmModal from "./DeleteColumnConfirmModal";
 import { getBoards } from "../../services/boardService";
 import MenuPortal from "./MenuPortal";
@@ -19,6 +22,8 @@ import {
   FaPen,
 } from "react-icons/fa";
 import LogoIcon from "../../assets/Logo Icone.png";
+import { toast } from "react-toastify";
+
 
 const BoardWorkspace = () => {
   const [boards, setBoards] = useState([]);
@@ -37,7 +42,12 @@ const BoardWorkspace = () => {
   const [columnToRename, setColumnToRename] = useState(null); // index ou id
   const [columnMenu, setColumnMenu] = useState(null); // { columnId, index, top, left }
   const [showDeleteColumnModal, setShowDeleteColumnModal] = useState(false);
-  const [columnToDeleteIndex, setColumnToDeleteIndex] = useState(null);  
+  const [columnToDeleteIndex, setColumnToDeleteIndex] = useState(null);
+  const [showCreateCardModal, setShowCreateCardModal] = useState(false);
+  const [columnToAddCard, setColumnToAddCard] = useState(null);
+  const [cardToEdit, setCardToEdit] = useState(null);
+  const [showDeleteCardConfirmModal, setShowDeleteCardConfirmModal] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState(null);
 
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -53,8 +63,17 @@ const BoardWorkspace = () => {
   useEffect(() => {
     const fetchBoards = async () => {
       const data = await getBoards();
-      console.log("Boards recebidos:", data); // Adicione isso
-      setBoards(data);
+
+      // Garante que cada coluna tenha a chave `cards` inicializada
+      const normalizedBoards = data.map((board) => ({
+        ...board,
+        columns: board.columns.map((column) => ({
+          ...column,
+          cards: column.cards || [], // fallback seguro
+        })),
+      }));
+
+      setBoards(normalizedBoards);
       setLoading(false);
     };
     fetchBoards();
@@ -71,7 +90,7 @@ const BoardWorkspace = () => {
         setActiveMenuIndex(null);
         setUserMenuOpen(false);
       }
-  
+
       if (
         columnDropdownRef.current &&
         !columnDropdownRef.current.contains(event.target)
@@ -82,7 +101,7 @@ const BoardWorkspace = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
+
 
   useEffect(() => {
     if (!sidebarOpen) {
@@ -113,17 +132,17 @@ const BoardWorkspace = () => {
       );
       return updatedBoards;
     });
-  
+
     setShowDeleteColumnModal(false);
     setColumnMenu(null);
   };
-  
+
 
   const openRenameColumnModal = (colIndex) => {
     setColumnToRename(colIndex);
     setShowRenameColumnModal(true);
   };
-  
+
   const handleConfirmRenameColumn = (newName) => {
     setBoards((prev) => {
       const updated = [...prev];
@@ -132,7 +151,7 @@ const BoardWorkspace = () => {
     });
     setShowRenameColumnModal(false);
   };
-  
+
   const handleCreateBoard = (newBoard) => {
     const newBoardWithColumns = {
       ...newBoard,
@@ -193,7 +212,7 @@ const BoardWorkspace = () => {
         name: columnName,
         cards: [], // Inicializa com cartões vazios
       };
-  
+
       // Atualiza o quadro selecionado com a nova coluna
       setBoards((prevBoards) => {
         const updatedBoards = [...prevBoards];
@@ -203,14 +222,76 @@ const BoardWorkspace = () => {
     }
   };
 
+  const handleCreateCardClick = (colIndex) => {
+    setColumnToAddCard(colIndex);
+    setShowCreateCardModal(true);
+  };
+
+  const handleCreateCard = async (cardData) => {
+    const updatedBoards = structuredClone(boards);
+    const board = updatedBoards[selectedBoardIndex];
+  
+    try {
+      // Verifica se é edição
+      if (cardData.id) {
+        const columnIndex = cardData.columnIndex ?? columnToAddCard;
+        const cards = board.columns[columnIndex].cards;
+  
+        const cardIndex = cards.findIndex((c) => c.id === cardData.id);
+        if (cardIndex !== -1) {
+          cards[cardIndex] = { ...cards[cardIndex], ...cardData };
+          toast.success("Cartão atualizado com sucesso!");
+        } else {
+          toast.warn("Cartão não encontrado para atualização.");
+        }
+      } else {
+        // Novo cartão
+        const columnIndex = columnToAddCard;
+        const newCard = await createCard(board.id, board.columns[columnIndex].id, cardData);
+        board.columns[columnIndex].cards.push(newCard);
+        toast.success("Cartão criado com sucesso!");
+      }
+  
+      setBoards(updatedBoards);
+      setShowCreateCardModal(false);
+      setCardToEdit(null);
+    } catch (error) {
+      console.error("Erro ao salvar cartão:", error);
+      toast.error("Erro ao salvar o cartão.");
+    }
+  };
+  
+
+  const handleDeleteCard = (card) => {
+    setCardToDelete(card);
+    setShowDeleteCardConfirmModal(true);
+  };
+
+  const confirmDeleteCard = () => {
+    const updatedBoards = structuredClone(boards);
+    const columnIndex = cardToDelete.columnIndex;
+  
+    updatedBoards[selectedBoardIndex].columns[columnIndex].cards =
+      updatedBoards[selectedBoardIndex].columns[columnIndex].cards.filter(
+        (c) => c.id !== cardToDelete.id
+      );
+  
+    setBoards(updatedBoards);
+    setCardToDelete(null);
+    setShowDeleteCardConfirmModal(false);
+    setShowCreateCardModal(false);
+    setCardToEdit(null);
+  
+    toast.success("Cartão excluído com sucesso!");
+  };  
+
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <div
-            className={`${styles.logo} ${
-              !sidebarOpen ? styles.logoHidden : ""
-            }`}
+            className={`${styles.logo} ${!sidebarOpen ? styles.logoHidden : ""
+              }`}
           >
             <img
               src={LogoIcon}
@@ -254,9 +335,8 @@ const BoardWorkspace = () => {
 
       <div className={styles.workspaceContainer}>
         <div
-          className={`${styles.toggleContainer} ${
-            sidebarOpen ? styles.open : styles.closed
-          }`}
+          className={`${styles.toggleContainer} ${sidebarOpen ? styles.open : styles.closed
+            }`}
         >
           <button
             className={styles.toggleSidebarBtn}
@@ -271,9 +351,8 @@ const BoardWorkspace = () => {
         </div>
 
         <aside
-          className={`${styles.sidebar} ${
-            !sidebarOpen ? styles.sidebarClosed : ""
-          }`}
+          className={`${styles.sidebar} ${!sidebarOpen ? styles.sidebarClosed : ""
+            }`}
         >
           <h3 className={styles.sidebarTitle}>Task Workspace</h3>
           <div className={styles.sidebarSection}>
@@ -282,9 +361,8 @@ const BoardWorkspace = () => {
               {boards.map((board, index) => (
                 <li
                   key={index}
-                  className={`${styles.boardItem} ${
-                    selectedBoardIndex === index ? styles.activeBoard : ""
-                  }`}
+                  className={`${styles.boardItem} ${selectedBoardIndex === index ? styles.activeBoard : ""
+                    }`}
                 >
                   <div
                     className={styles.boardContent}
@@ -344,107 +422,121 @@ const BoardWorkspace = () => {
               <div className={styles.columnsArea}>
                 {boards[selectedBoardIndex]?.columns?.length > 0 ? (
                   <>
-{boards[selectedBoardIndex].columns.map((column, colIndex) => (
-  <div key={column.id} className={styles.column}>
-    <div className={styles.columnHeader}>
-      <h3 className={styles.columnTitle}>{column.name}</h3>
-      <FaEllipsisH
-        onClick={(e) => {
-          e.stopPropagation();
-          const rect = e.currentTarget.getBoundingClientRect();
-          setColumnMenu({
-            columnId: column.id,
-            index: colIndex,
-            top: rect.bottom,
-            left: rect.left,
-          });
-        }}
-        className={styles.columnMenuIcon}
-      />
-    </div>
+                    {boards[selectedBoardIndex].columns.map((column, colIndex) => (
+                      <div key={column.id} className={styles.column}>
+                        {/* Cabeçalho da coluna */}
+                        <div className={styles.columnHeader}>
+                          <h3 className={styles.columnTitle}>{column.name}</h3>
+                          <FaEllipsisH
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setColumnMenu({
+                                columnId: column.id,
+                                index: colIndex,
+                                top: rect.bottom,
+                                left: rect.left,
+                              });
+                            }}
+                            className={styles.columnMenuIcon}
+                          />
+                        </div>
 
-    {columnMenu?.columnId === column.id && (
-      <MenuPortal>
-  <div
-    ref={columnDropdownRef }
-    className={styles.dropdownMenu}
-    style={{
-      top: columnMenu.top,
-      left: columnMenu.left,
-      position: "fixed",
-      zIndex: 9999,
-    }}
-  >
-    <button onClick={() => openRenameColumnModal(columnMenu.index)}>
-      <FaPen size={12} style={{ marginRight: "6px" }} />
-      Renomear
-    </button>
-    <button onClick={() => confirmDeleteColumn(columnMenu.index)}>
-  <FaTrashAlt size={12} style={{ marginRight: "6px" }} />
-  Excluir
-</button>
-  </div>
-</MenuPortal>
-    )}
+                        {/* Menu da coluna */}
+                        {columnMenu?.columnId === column.id && (
+                          <MenuPortal>
+                            <div
+                              ref={columnDropdownRef}
+                              className={styles.dropdownMenu}
+                              style={{
+                                top: columnMenu.top,
+                                left: columnMenu.left,
+                                position: "fixed",
+                                zIndex: 9999,
+                              }}
+                            >
+                              <button onClick={() => openRenameColumnModal(columnMenu.index)}>
+                                <FaPen size={12} style={{ marginRight: "6px" }} />
+                                Renomear
+                              </button>
+                              <button onClick={() => confirmDeleteColumn(columnMenu.index)}>
+                                <FaTrashAlt size={12} style={{ marginRight: "6px" }} />
+                                Excluir
+                              </button>
+                            </div>
+                          </MenuPortal>
+                        )}
 
-    <div className={styles.columnContent}>
-      {column.cards?.length > 0 ? (
-        column.cards.map((card) => (
-          <div key={card.id} className={styles.card}>
-            {card.title}
-          </div>
-        ))
-      ) : (
-        <span className={styles.placeholder}>Sem cartões</span>
-      )}
-    </div>
-  </div>
-))}
+                        {/* Conteúdo dos cards */}
+                        <div className={styles.columnContent}>
+                          {column.cards?.length > 0 ? (
+                            column.cards.map((card) => (
+                              <div
+                                key={card.id}
+                                className={styles.card}
+                                onClick={() => {
+                                  setCardToEdit({ ...card, columnIndex: colIndex });
+                                  setShowCreateCardModal(true);
+                                }}
+                              >
+                                {card.title}
+                              </div>
+                            ))
+                          ) : (
+                            <span className={styles.placeholder}>Sem cartões</span>
+                          )}
+                        </div>
 
+                        {/* Botão de adicionar cartão */}
+                        <button
+                          className={styles.addCardBtn}
+                          onClick={() => handleCreateCardClick(colIndex)}
+                        >
+                          + Adicionar Cartão
+                        </button>
+                      </div>
+                    ))}
 
                     {/* Botão fixo ao final das colunas */}
                     <button
-  className={styles.addColumnStyledBtn}
-  onClick={() => {
-    if (selectedBoardIndex !== null) {
-      setShowCreateColumnModal(true);
-    } else {
-      // Opcional: Avisar o usuário para selecionar ou criar um quadro
-      alert("Selecione ou crie um quadro primeiro.");
-    }
-  }}
->
-  <FaPlus size={10} style={{ marginRight: "6px" }} />
-  Adicionar nova lista
-</button>
+                      className={styles.addColumnStyledBtn}
+                      onClick={() => {
+                        if (selectedBoardIndex !== null) {
+                          setShowCreateColumnModal(true);
+                        } else {
+                          alert("Selecione ou crie um quadro primeiro.");
+                        }
+                      }}
+                    >
+                      <FaPlus size={10} style={{ marginRight: "6px" }} />
+                      Adicionar nova lista
+                    </button>
                   </>
                 ) : (
-                  // Exibir área vazia com o botão centralizado
                   <div className={styles.emptyBoard}>
                     <p className={styles.emptyText}>
-                      Este quadro está vazio.{" "}
-                      <em>Comece criando uma coluna.</em>
+                      Este quadro está vazio. <em>Comece criando uma coluna.</em>
                     </p>
-<button
-  className={styles.addColumnStyledBtn}
-  onClick={() => {
-    if (selectedBoardIndex !== null) {
-      setShowCreateColumnModal(true);
-    } else {
-      // Opcional: Avisar o usuário para selecionar ou criar um quadro
-      alert("Selecione ou crie um quadro primeiro.");
-    }
-  }}
->
-  <FaPlus size={10} style={{ marginRight: "6px" }} />
-  Adicionar nova lista
-</button>
+                    <button
+                      className={styles.addColumnStyledBtn}
+                      onClick={() => {
+                        if (selectedBoardIndex !== null) {
+                          setShowCreateColumnModal(true);
+                        } else {
+                          alert("Selecione ou crie um quadro primeiro.");
+                        }
+                      }}
+                    >
+                      <FaPlus size={10} style={{ marginRight: "6px" }} />
+                      Adicionar nova lista
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           )}
 
+          {/* Modal de criação de coluna */}
           {showCreateColumnModal && (
             <CreateColumnModal
               onClose={() => setShowCreateColumnModal(false)}
@@ -452,9 +544,8 @@ const BoardWorkspace = () => {
             />
           )}
 
-
-          
         </main>
+
       </div>
 
       {showModal && (
@@ -490,21 +581,45 @@ const BoardWorkspace = () => {
         />
       )}
 
-{showRenameColumnModal && (
-  <RenameColumnModal
-    currentName={boards[selectedBoardIndex].columns[columnToRename].name}
-    onClose={() => setShowRenameColumnModal(false)}
-    onConfirm={handleConfirmRenameColumn}
-  />
-)}
+      {showRenameColumnModal && (
+        <RenameColumnModal
+          currentName={boards[selectedBoardIndex].columns[columnToRename].name}
+          onClose={() => setShowRenameColumnModal(false)}
+          onConfirm={handleConfirmRenameColumn}
+        />
+      )}
 
-{showDeleteColumnModal && (
-  <DeleteColumnConfirmModal
-    columnName={boards[selectedBoardIndex].columns[columnToDeleteIndex].name}
-    onCancel={() => setShowDeleteColumnModal(false)}
-    onConfirm={handleConfirmDeleteColumn}
-  />
-)}
+      {showDeleteColumnModal && (
+        <DeleteColumnConfirmModal
+          columnName={boards[selectedBoardIndex].columns[columnToDeleteIndex].name}
+          onCancel={() => setShowDeleteColumnModal(false)}
+          onConfirm={handleConfirmDeleteColumn}
+        />
+      )}
+
+      {showCreateCardModal && (
+        <CreateCardModal
+          onClose={() => {
+            setShowCreateCardModal(false);
+            setCardToEdit(null);
+          }}
+          onCreate={handleCreateCard}
+          onDelete={handleDeleteCard}  // ✅ nova prop
+          card={cardToEdit}
+          isEditing={!!cardToEdit}
+        />
+      )}
+
+      {showDeleteCardConfirmModal && (
+        <DeleteCardConfirmModal
+          cardTitle={cardToDelete?.title}
+          onCancel={() => {
+            setShowDeleteCardConfirmModal(false);
+            setCardToDelete(null);
+          }}
+          onConfirm={confirmDeleteCard}
+        />
+      )}
 
     </div>
   );
