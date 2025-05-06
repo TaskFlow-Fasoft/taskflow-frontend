@@ -3,9 +3,13 @@ import Login from './pages/login';
 import ProtectedRoute from './components/ProtectedRoute';
 import BoardWorkspace from './pages/boards/BoardWorkspace';
 import './App.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
@@ -18,6 +22,8 @@ function App() {
         }
       />
     </Routes>
+    <ToastContainer position="top-right" autoClose={3000} />
+    </>
   );
 }
 
