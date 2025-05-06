@@ -25,3 +25,15 @@ export const createCard = async (boardId, columnId, cardData) => {
   if (!response.ok) throw new Error("Erro ao criar cartão");
   return await response.json();
 };
+
+export const updateCardOrder = async (boardId, columns) => {
+  // Simula uma chamada ao backend para salvar a nova ordem
+  console.log("Salvando nova ordem dos cartões para o board", boardId);
+  console.log("Colunas atualizadas:", columns);
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ success: true });
+    }, 500);
+  });
+};
