@@ -9,6 +9,7 @@ import DeleteConfirmModal from "./DeleteConfirmModal";
 import RenameColumnModal from "./RenameColumnModal";
 import DeleteCardConfirmModal from "./DeleteCardConfirmModal";
 import CreateCardModal from "./CreateCardModal";
+import { updateCardOrder } from "../../services/cardService";
 import DeleteColumnConfirmModal from "./DeleteColumnConfirmModal";
 import { getBoards } from "../../services/boardService";
 import MenuPortal from "./MenuPortal";
@@ -23,6 +24,7 @@ import {
 } from "react-icons/fa";
 import LogoIcon from "../../assets/Logo Icone.png";
 import { toast } from "react-toastify";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 
 const BoardWorkspace = () => {
@@ -63,21 +65,27 @@ const BoardWorkspace = () => {
   useEffect(() => {
     const fetchBoards = async () => {
       const data = await getBoards();
-
-      // Garante que cada coluna tenha a chave `cards` inicializada
+  
       const normalizedBoards = data.map((board) => ({
         ...board,
+        id: String(board.id),
         columns: board.columns.map((column) => ({
           ...column,
-          cards: column.cards || [], // fallback seguro
+          id: String(column.id),
+          cards: column.cards.map((card) => ({
+            ...card,
+            id: String(card.id),
+          })),
         })),
       }));
-
+  
       setBoards(normalizedBoards);
       setLoading(false);
     };
+  
     fetchBoards();
   }, []);
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -230,13 +238,13 @@ const BoardWorkspace = () => {
   const handleCreateCard = async (cardData) => {
     const updatedBoards = structuredClone(boards);
     const board = updatedBoards[selectedBoardIndex];
-  
+
     try {
       // Verifica se é edição
       if (cardData.id) {
         const columnIndex = cardData.columnIndex ?? columnToAddCard;
         const cards = board.columns[columnIndex].cards;
-  
+
         const cardIndex = cards.findIndex((c) => c.id === cardData.id);
         if (cardIndex !== -1) {
           cards[cardIndex] = { ...cards[cardIndex], ...cardData };
@@ -251,7 +259,7 @@ const BoardWorkspace = () => {
         board.columns[columnIndex].cards.push(newCard);
         toast.success("Cartão criado com sucesso!");
       }
-  
+
       setBoards(updatedBoards);
       setShowCreateCardModal(false);
       setCardToEdit(null);
@@ -260,7 +268,7 @@ const BoardWorkspace = () => {
       toast.error("Erro ao salvar o cartão.");
     }
   };
-  
+
 
   const handleDeleteCard = (card) => {
     setCardToDelete(card);
@@ -270,20 +278,56 @@ const BoardWorkspace = () => {
   const confirmDeleteCard = () => {
     const updatedBoards = structuredClone(boards);
     const columnIndex = cardToDelete.columnIndex;
-  
+
     updatedBoards[selectedBoardIndex].columns[columnIndex].cards =
       updatedBoards[selectedBoardIndex].columns[columnIndex].cards.filter(
         (c) => c.id !== cardToDelete.id
       );
-  
+
     setBoards(updatedBoards);
     setCardToDelete(null);
     setShowDeleteCardConfirmModal(false);
     setShowCreateCardModal(false);
     setCardToEdit(null);
-  
+
     toast.success("Cartão excluído com sucesso!");
-  };  
+  };
+
+  const handleDragEnd = async (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) return;
+
+    const updatedBoards = structuredClone(boards);
+    const board = updatedBoards[selectedBoardIndex];
+
+    const sourceColIndex = board.columns.findIndex(
+      (col) => String(col.id) === source.droppableId
+    );
+    const destColIndex = board.columns.findIndex(
+      (col) => String(col.id) === destination.droppableId
+    );
+
+    const sourceCol = board.columns[sourceColIndex];
+    const destCol = board.columns[destColIndex];
+
+    const [movedCard] = sourceCol.cards.splice(source.index, 1);
+    destCol.cards.splice(destination.index, 0, movedCard);
+
+    setBoards(updatedBoards);
+
+    try {
+      await updateCardOrder(board.id, board.columns);
+    } catch (error) {
+      console.error("Erro ao atualizar ordem dos cards:", error);
+      toast.error("Erro ao salvar nova ordem dos cards.");
+    }
+  };
+
+
 
   return (
     <div className={styles.pageContainer}>
@@ -419,120 +463,133 @@ const BoardWorkspace = () => {
                 {boards[selectedBoardIndex]?.name}
               </h2>
 
-              <div className={styles.columnsArea}>
-                {boards[selectedBoardIndex]?.columns?.length > 0 ? (
-                  <>
-                    {boards[selectedBoardIndex].columns.map((column, colIndex) => (
-                      <div key={column.id} className={styles.column}>
-                        {/* Cabeçalho da coluna */}
-                        <div className={styles.columnHeader}>
-                          <h3 className={styles.columnTitle}>{column.name}</h3>
-                          <FaEllipsisH
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setColumnMenu({
-                                columnId: column.id,
-                                index: colIndex,
-                                top: rect.bottom,
-                                left: rect.left,
-                              });
-                            }}
-                            className={styles.columnMenuIcon}
-                          />
-                        </div>
-
-                        {/* Menu da coluna */}
-                        {columnMenu?.columnId === column.id && (
-                          <MenuPortal>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <div className={styles.columnsArea}>
+                  {boards[selectedBoardIndex]?.columns?.length > 0 ? (
+                    <>
+                      {boards[selectedBoardIndex].columns.map((column, colIndex) => (
+                        <Droppable droppableId={String(column.id)} key={column.id}>
+                          {(provided) => (
                             <div
-                              ref={columnDropdownRef}
-                              className={styles.dropdownMenu}
-                              style={{
-                                top: columnMenu.top,
-                                left: columnMenu.left,
-                                position: "fixed",
-                                zIndex: 9999,
-                              }}
+                              className={styles.column}
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
                             >
-                              <button onClick={() => openRenameColumnModal(columnMenu.index)}>
-                                <FaPen size={12} style={{ marginRight: "6px" }} />
-                                Renomear
-                              </button>
-                              <button onClick={() => confirmDeleteColumn(columnMenu.index)}>
-                                <FaTrashAlt size={12} style={{ marginRight: "6px" }} />
-                                Excluir
+                              <div className={styles.columnHeader}>
+                                <h3 className={styles.columnTitle}>{column.name}</h3>
+                                <FaEllipsisH
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setColumnMenu({
+                                      columnId: column.id,
+                                      index: colIndex,
+                                      top: rect.bottom,
+                                      left: rect.left,
+                                    });
+                                  }}
+                                  className={styles.columnMenuIcon}
+                                />
+                              </div>
+
+                              {columnMenu?.columnId === column.id && (
+                                <MenuPortal>
+                                  <div
+                                    ref={columnDropdownRef}
+                                    className={styles.dropdownMenu}
+                                    style={{
+                                      top: columnMenu.top,
+                                      left: columnMenu.left,
+                                      position: "fixed",
+                                      zIndex: 9999,
+                                    }}
+                                  >
+                                    <button onClick={() => openRenameColumnModal(columnMenu.index)}>
+                                      <FaPen size={12} style={{ marginRight: "6px" }} />
+                                      Renomear
+                                    </button>
+                                    <button onClick={() => confirmDeleteColumn(columnMenu.index)}>
+                                      <FaTrashAlt size={12} style={{ marginRight: "6px" }} />
+                                      Excluir
+                                    </button>
+                                  </div>
+                                </MenuPortal>
+                              )}
+
+                              <div className={styles.columnContent}>
+                                {column.cards?.length > 0 ? (
+                                  column.cards.map((card, cardIndex) => (
+                                    <Draggable draggableId={String(card.id)} index={cardIndex} key={card.id}>
+                                      {(provided) => (
+                                        <div
+                                          className={styles.card}
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          onClick={() => {
+                                            setCardToEdit({ ...card, columnIndex: colIndex });
+                                            setShowCreateCardModal(true);
+                                          }}
+                                        >
+                                          {card.title}
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))
+                                ) : (
+                                  <span className={styles.placeholder}>Sem cartões</span>
+                                )}
+                                {provided.placeholder}
+                              </div>
+
+                              <button
+                                className={styles.addCardBtn}
+                                onClick={() => handleCreateCardClick(colIndex)}
+                              >
+                                + Adicionar Cartão
                               </button>
                             </div>
-                          </MenuPortal>
-                        )}
-
-                        {/* Conteúdo dos cards */}
-                        <div className={styles.columnContent}>
-                          {column.cards?.length > 0 ? (
-                            column.cards.map((card) => (
-                              <div
-                                key={card.id}
-                                className={styles.card}
-                                onClick={() => {
-                                  setCardToEdit({ ...card, columnIndex: colIndex });
-                                  setShowCreateCardModal(true);
-                                }}
-                              >
-                                {card.title}
-                              </div>
-                            ))
-                          ) : (
-                            <span className={styles.placeholder}>Sem cartões</span>
                           )}
-                        </div>
+                        </Droppable>
+                      ))}
 
-                        {/* Botão de adicionar cartão */}
-                        <button
-                          className={styles.addCardBtn}
-                          onClick={() => handleCreateCardClick(colIndex)}
-                        >
-                          + Adicionar Cartão
-                        </button>
-                      </div>
-                    ))}
+                      <button
+                        className={styles.addColumnStyledBtn}
+                        onClick={() => {
+                          if (selectedBoardIndex !== null) {
+                            setShowCreateColumnModal(true);
+                          } else {
+                            alert("Selecione ou crie um quadro primeiro.");
+                          }
+                        }}
+                      >
+                        <FaPlus size={10} style={{ marginRight: "6px" }} />
+                        Adicionar nova lista
+                      </button>
+                    </>
+                  ) : (
+                    <div className={styles.emptyBoard}>
+                      <p className={styles.emptyText}>
+                        Este quadro está vazio. <em>Comece criando uma coluna.</em>
+                      </p>
+                      <button
+                        className={styles.addColumnStyledBtn}
+                        onClick={() => {
+                          if (selectedBoardIndex !== null) {
+                            setShowCreateColumnModal(true);
+                          } else {
+                            alert("Selecione ou crie um quadro primeiro.");
+                          }
+                        }}
+                      >
+                        <FaPlus size={10} style={{ marginRight: "6px" }} />
+                        Adicionar nova lista
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </DragDropContext>
 
-                    {/* Botão fixo ao final das colunas */}
-                    <button
-                      className={styles.addColumnStyledBtn}
-                      onClick={() => {
-                        if (selectedBoardIndex !== null) {
-                          setShowCreateColumnModal(true);
-                        } else {
-                          alert("Selecione ou crie um quadro primeiro.");
-                        }
-                      }}
-                    >
-                      <FaPlus size={10} style={{ marginRight: "6px" }} />
-                      Adicionar nova lista
-                    </button>
-                  </>
-                ) : (
-                  <div className={styles.emptyBoard}>
-                    <p className={styles.emptyText}>
-                      Este quadro está vazio. <em>Comece criando uma coluna.</em>
-                    </p>
-                    <button
-                      className={styles.addColumnStyledBtn}
-                      onClick={() => {
-                        if (selectedBoardIndex !== null) {
-                          setShowCreateColumnModal(true);
-                        } else {
-                          alert("Selecione ou crie um quadro primeiro.");
-                        }
-                      }}
-                    >
-                      <FaPlus size={10} style={{ marginRight: "6px" }} />
-                      Adicionar nova lista
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
