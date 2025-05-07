@@ -1,34 +1,34 @@
-export const register = async (name, email, password) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simula atraso da API
-  
-    // Validações
-    if (!name || name.length < 2 || !email.includes("@") || password.length < 6) {
+// src/services/registerService.js
+
+import axios from 'axios';
+
+const API_URL = 'http://25.59.132.184:8000'; // Ajuste conforme o backend
+
+export const register = async (username, email, password) => {
+  try {
+    // Faz a requisição POST para o backend para registrar o usuário
+    const response = await axios.post(`${API_URL}/auth/register`, {
+      username,
+      email,
+      password
+    });
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        message: 'Cadastro realizado com sucesso!',
+      };
+    } else {
       return {
         success: false,
-        message: "Verifique os campos: nome, e-mail e senha válidos.",
+        message: response.data.detail || 'Erro no cadastro.',
       };
     }
-  
-    // Recupera lista atual de usuários do localStorage
-    const storedUsers = JSON.parse(localStorage.getItem("mockUsers")) || [];
-  
-    // Verifica se o e-mail já está cadastrado
-    const userExists = storedUsers.find((user) => user.email === email);
-    if (userExists) {
-      return {
-        success: false,
-        message: "Este e-mail já está cadastrado.",
-      };
-    }
-  
-    // Adiciona novo usuário
-    const newUser = { name, email, password };
-    storedUsers.push(newUser);
-    localStorage.setItem("mockUsers", JSON.stringify(storedUsers));
-  
+  } catch (error) {
+    console.error('Erro ao tentar registrar:', error);
     return {
-      success: true,
-      message: "Cadastro realizado com sucesso!",
+      success: false,
+      message: error.response ? error.response.data.message : 'Erro desconhecido ao tentar registrar.',
     };
-  };
-  
+  }
+};

@@ -10,6 +10,8 @@ const LoginForm = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false); // Controla visibilidade do modal
+  const [registerErrorMsg, setRegisterErrorMsg] = useState("");
+  const [registerSuccessMsg, setRegisterSuccessMsg] = useState("");
 
   const navigate = useNavigate();
 
@@ -38,6 +40,19 @@ const LoginForm = () => {
     }
 
     setLoading(false);
+  };
+
+  const handleRegisterSubmit = async (username, email, password) => {
+    const response = await register(username, email, password);
+    
+    if (response.success) {
+      setRegisterSuccessMsg(response.message);
+      setRegisterErrorMsg("");  // Limpa qualquer erro anterior
+      setShowModal(false);  // Fecha o modal após o sucesso
+    } else {
+      setRegisterErrorMsg(response.message || "Erro no cadastro.");
+      setRegisterSuccessMsg("");  // Limpa qualquer mensagem de sucesso anterior
+    }
   };
 
   return (
@@ -99,7 +114,20 @@ const LoginForm = () => {
       </form>
 
       {/* Modal de registro exibido condicionalmente */}
-      {showModal && <RegisterModal onClose={() => setShowModal(false)} />}
+      {showModal && <RegisterModal onClose={() => setShowModal(false)} onRegisterSubmit={handleRegisterSubmit} />}
+
+      {/* Exibindo mensagens de erro ou sucesso no registro */}
+      {registerErrorMsg && (
+        <p style={{ color: "red", fontSize: "0.9rem", marginTop: "-1rem" }}>
+          {registerErrorMsg}
+        </p>
+      )}
+
+      {registerSuccessMsg && (
+        <p style={{ color: "green", fontSize: "0.9rem", marginTop: "-1rem" }}>
+          {registerSuccessMsg}
+        </p>
+      )}
     </div>
   );
 };
