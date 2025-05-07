@@ -66,16 +66,15 @@ const BoardWorkspace = () => {
     const fetchBoards = async () => {
       const data = await getBoards();
   
-      // Normaliza todos os IDs para string, independentemente do tipo original
       const normalizedBoards = data.map((board) => ({
         ...board,
-        id: String(board.id), // Garante que o ID do board é string
-        columns: (board.columns || []).map((column) => ({
+        id: String(board.id),
+        columns: board.columns.map((column) => ({
           ...column,
-          id: String(column.id), // Garante que o ID da coluna é string
-          cards: (column.cards || []).map((card) => ({
+          id: String(column.id),
+          cards: column.cards.map((card) => ({
             ...card,
-            id: String(card.id), // Garante que o ID do card é string
+            id: String(card.id),
           })),
         })),
       }));
@@ -87,6 +86,7 @@ const BoardWorkspace = () => {
     fetchBoards();
   }, []);
   
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -207,8 +207,8 @@ const BoardWorkspace = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userEmail");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("expires_at");
     setUserMenuOpen(false);
     navigate("/login");
   };

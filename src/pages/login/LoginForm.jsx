@@ -15,11 +15,12 @@ const LoginForm = () => {
 
   // Redireciona se já estiver logado
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("access_token");
     if (token) {
+      // Evita o loop, redireciona apenas se necessário
       navigate("/boards");
     }
-  }, []);
+  }, [navigate]); // Dependência no "navigate" e não no estado
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,8 +30,8 @@ const LoginForm = () => {
     const response = await login(email, password);
 
     if (response.success) {
-      localStorage.setItem("authToken", response.token);
-      localStorage.setItem("userEmail", response.user.email);
+      localStorage.setItem("access_token", response.access_token);
+      localStorage.setItem("expires_at", response.expires_at);
       navigate("/boards");
     } else {
       setErrorMsg(response.message || "Falha na autenticação.");
