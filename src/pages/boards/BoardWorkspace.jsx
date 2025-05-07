@@ -25,7 +25,9 @@ import {
 import LogoIcon from "../../assets/Logo Icone.png";
 import { toast } from "react-toastify";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-
+import { createBoard } from "../../services/boardService";
+import { deleteBoard } from "../../services/boardService"; 
+import { updateBoard } from "../../services/boardService";
 
 const BoardWorkspace = () => {
   const [boards, setBoards] = useState([]);
@@ -160,14 +162,19 @@ const BoardWorkspace = () => {
     setShowRenameColumnModal(false);
   };
 
-  const handleCreateBoard = (newBoard) => {
-    const newBoardWithColumns = {
-      ...newBoard,
-      columns: [], // Inicializa com colunas vazias
-      id: Date.now() // Garantir que o quadro tenha um ID único
-    };
-    setBoards((prev) => [...prev, newBoardWithColumns]);
+  const handleCreateBoard = async (newBoard) => {
+    const { name } = newBoard;
+  
+    const result = await createBoard(name);
+  
+    if (result.success) {
+      setBoards((prev) => [...prev, result.board]);
+    } else {
+      console.error(result.message);
+      toast.error("Erro ao criar quadro.");
+    }
   };
+  
 
   const handleMenuToggle = (index, event) => {
     event.stopPropagation();
@@ -188,23 +195,43 @@ const BoardWorkspace = () => {
     setActiveMenuIndex(null);
   };
 
-  const confirmDeleteBoard = () => {
-    setBoards((prev) => prev.filter((_, i) => i !== deleteIndex));
-    if (selectedBoardIndex === deleteIndex) {
-      setSelectedBoardIndex(null);
+  const confirmDeleteBoard = async () => {
+    const boardId = boards[deleteIndex]?.id;
+    const result = await deleteBoard(boardId);
+  
+    if (result.success) {
+      setBoards((prev) => prev.filter((_, i) => i !== deleteIndex));
+      if (selectedBoardIndex === deleteIndex) {
+        setSelectedBoardIndex(null);
+      }
+      toast.success("Quadro excluído com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao excluir quadro.");
     }
+  
     setShowDeleteModal(false);
   };
+  
 
-  const handleConfirmRename = (newName) => {
-    setBoards((prev) => {
-      const updated = [...prev];
-      updated[renameIndex].name = newName;
-      return updated;
-    });
+  const handleConfirmRename = async (newName) => {
+    const board = boards[renameIndex];
+    const result = await updateBoard(board.id, newName);
+  
+    if (result.success) {
+      setBoards((prev) => {
+        const updated = [...prev];
+        updated[renameIndex].name = newName;
+        return updated;
+      });
+      toast.success("Quadro renomeado com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao renomear quadro.");
+    }
+  
     setRenameIndex(null);
     setShowRenameModal(false);
   };
+  
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
