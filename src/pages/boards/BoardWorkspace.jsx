@@ -28,6 +28,10 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { createBoard } from "../../services/boardService";
 import { deleteBoard } from "../../services/boardService"; 
 import { updateBoard } from "../../services/boardService";
+import { createColumn } from "../../services/columnService";
+import { updateColumn } from "../../services/columnService";
+import { deleteColumn } from "../../services/columnService";
+import { getBoardColumns } from "../../services/columnService";
 
 const BoardWorkspace = () => {
   const [boards, setBoards] = useState([]);
@@ -134,15 +138,25 @@ const BoardWorkspace = () => {
     setShowDeleteColumnModal(true);
   };
 
-  const handleConfirmDeleteColumn = () => {
-    setBoards((prevBoards) => {
-      const updatedBoards = structuredClone(prevBoards);
-      updatedBoards[selectedBoardIndex].columns = updatedBoards[selectedBoardIndex].columns.filter(
-        (_, index) => index !== columnToDeleteIndex
-      );
-      return updatedBoards;
-    });
-
+  const handleConfirmDeleteColumn = async () => {
+    const board = boards[selectedBoardIndex];
+    const column = board.columns[columnToDeleteIndex];
+  
+    const result = await deleteColumn(board.id, column.id);
+  
+    if (result.success) {
+      setBoards((prevBoards) => {
+        const updatedBoards = structuredClone(prevBoards);
+        updatedBoards[selectedBoardIndex].columns = updatedBoards[selectedBoardIndex].columns.filter(
+          (_, index) => index !== columnToDeleteIndex
+        );
+        return updatedBoards;
+      });
+      toast.success("Coluna excluída com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao excluir coluna.");
+    }
+  
     setShowDeleteColumnModal(false);
     setColumnMenu(null);
   };
@@ -153,14 +167,26 @@ const BoardWorkspace = () => {
     setShowRenameColumnModal(true);
   };
 
-  const handleConfirmRenameColumn = (newName) => {
-    setBoards((prev) => {
-      const updated = [...prev];
-      updated[selectedBoardIndex].columns[columnToRename].name = newName;
-      return updated;
-    });
+  const handleConfirmRenameColumn = async (newName) => {
+    const board = boards[selectedBoardIndex];
+    const column = board.columns[columnToRename];
+  
+    const result = await updateColumn(board.id, column.id, newName);
+  
+    if (result.success) {
+      setBoards((prev) => {
+        const updated = [...prev];
+        updated[selectedBoardIndex].columns[columnToRename].name = newName;
+        return updated;
+      });
+      toast.success("Coluna renomeada com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao renomear coluna.");
+    }
+  
     setShowRenameColumnModal(false);
   };
+  
 
   const handleCreateBoard = async (newBoard) => {
     const { name } = newBoard;
@@ -240,22 +266,33 @@ const BoardWorkspace = () => {
     navigate("/login");
   };
 
-  const handleCreateColumn = (columnName) => {
+  const handleCreateColumn = async (columnName) => {
     if (selectedBoardIndex !== null) {
-      const newColumn = {
-        id: Date.now(), // Gerar um ID único
-        name: columnName,
-        cards: [], // Inicializa com cartões vazios
-      };
-
-      // Atualiza o quadro selecionado com a nova coluna
-      setBoards((prevBoards) => {
-        const updatedBoards = [...prevBoards];
-        updatedBoards[selectedBoardIndex].columns.push(newColumn);
-        return updatedBoards;
-      });
+      const board = boards[selectedBoardIndex];
+      const result = await createColumn(board.id, columnName);
+  
+      if (result.success && result.column) {
+        const normalizedColumn = {
+          ...result.column,
+          id: String(result.column.id),
+          name: columnName, // <- agora renderiza corretamente
+          cards: [],
+        };
+  
+        setBoards((prevBoards) => {
+          const updated = structuredClone(prevBoards);
+          updated[selectedBoardIndex].columns.push(normalizedColumn);
+          return updated;
+        });
+  
+        toast.success("Coluna criada com sucesso!");
+      } else {
+        toast.error(result.message || "Erro ao criar coluna.");
+      }
     }
-  };
+  };  
+
+  
 
   const handleCreateCardClick = (colIndex) => {
     setColumnToAddCard(colIndex);
@@ -354,8 +391,29 @@ const BoardWorkspace = () => {
     }
   };
 
-
-
+  const handleSelectBoard = async (index) => {
+    setSelectedBoardIndex(index);
+  
+    const board = boards[index];
+    const columns = await getBoardColumns(board.id);
+  
+    const normalizedColumns = columns.map((col) => ({
+      ...col,
+      id: String(col.id),
+      name: col.title,
+      cards: col.cards?.map((card) => ({
+        ...card,
+        id: String(card.id),
+      })) || [],
+    }));
+  
+    setBoards((prevBoards) => {
+      const updated = [...prevBoards];
+      updated[index].columns = normalizedColumns;
+      return updated;
+    });
+  };  
+  
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
@@ -435,10 +493,10 @@ const BoardWorkspace = () => {
                   className={`${styles.boardItem} ${selectedBoardIndex === index ? styles.activeBoard : ""
                     }`}
                 >
-                  <div
-                    className={styles.boardContent}
-                    onClick={() => setSelectedBoardIndex(index)}
-                  >
+<div
+  className={styles.boardContent}
+  onClick={() => handleSelectBoard(index)}
+>
                     <span className={styles.pinIcon}>📌</span>
                     {board.name}
                   </div>
@@ -655,13 +713,6 @@ const BoardWorkspace = () => {
           boardName={boards[deleteIndex]?.name}
           onCancel={() => setShowDeleteModal(false)}
           onConfirm={confirmDeleteBoard}
-        />
-      )}
-
-      {showCreateColumnModal && (
-        <CreateColumnModal
-          onClose={() => setShowCreateColumnModal(false)}
-          onCreate={handleCreateColumn}
         />
       )}
 

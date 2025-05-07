@@ -11,7 +11,6 @@ export async function getBoards() {
 
     const boards = boardResponse.data.boards;
 
-    // Agora busca as colunas de cada board separadamente
     const boardsWithColumns = await Promise.all(
       boards.map(async (board) => {
         try {
@@ -19,22 +18,19 @@ export async function getBoards() {
             headers: { Authorization: `Bearer ${token}` }
           });
 
-          const columns = colRes.data.columns || [];
+          const rawColumns = colRes.data.columns || [];
 
-          // Normaliza estrutura com cards vazios (ou ajuste se vierem com cards)
-          const normalizedColumns = columns.map((column) => ({
-            ...column,
-            id: String(column.id),
-            cards: column.cards
-              ? column.cards.map((card) => ({ ...card, id: String(card.id) }))
-              : []
+          const columns = rawColumns.map((col) => ({
+            id: String(col.id),
+            name: col.title, // converte de 'title' para 'name'
+            cards: [] // cards ainda não vêm, então iniciamos vazio
           }));
 
           return {
             ...board,
             id: String(board.id),
             name: board.title,
-            columns: normalizedColumns
+            columns
           };
         } catch (err) {
           console.error(`Erro ao buscar colunas do board ${board.id}:`, err);
@@ -54,6 +50,7 @@ export async function getBoards() {
     return [];
   }
 }
+
 
 export async function createBoard(title) {
   const token = localStorage.getItem("access_token");
