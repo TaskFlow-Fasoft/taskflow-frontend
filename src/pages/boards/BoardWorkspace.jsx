@@ -32,6 +32,10 @@ import { createColumn } from "../../services/columnService";
 import { updateColumn } from "../../services/columnService";
 import { deleteColumn } from "../../services/columnService";
 import { getBoardColumns } from "../../services/columnService";
+import { createTask } from "../../services/taskService";
+import { updateTask } from "../../services/taskService";
+import { deleteTask } from "../../services/taskService";
+
 
 const BoardWorkspace = () => {
   const [boards, setBoards] = useState([]);
@@ -302,28 +306,71 @@ const BoardWorkspace = () => {
   const handleCreateCard = async (cardData) => {
     const updatedBoards = structuredClone(boards);
     const board = updatedBoards[selectedBoardIndex];
-
+  
     try {
-      // Verifica se é edição
       if (cardData.id) {
-        const columnIndex = cardData.columnIndex ?? columnToAddCard;
+        let columnIndex = cardData.columnIndex;
+        if (columnIndex === undefined || columnIndex === null) {
+          columnIndex = board.columns.findIndex((col) =>
+            col.cards.some((card) => card.id === cardData.id)
+          );
+        }
+        
+        if (columnIndex === -1) {
+          toast.error("Coluna do cartão não encontrada.");
+          return;
+        }
+        
+        const payload = {
+          board_id: board.id,
+          column_id: board.columns[columnIndex].id,
+          task_id: cardData.id,
+          title: cardData.title,
+          description: cardData.description,
+          due_date: cardData.dueDate,
+        };
+  
+        await updateTask(payload);
+  
         const cards = board.columns[columnIndex].cards;
-
         const cardIndex = cards.findIndex((c) => c.id === cardData.id);
+  
         if (cardIndex !== -1) {
-          cards[cardIndex] = { ...cards[cardIndex], ...cardData };
+          cards[cardIndex] = {
+            ...cards[cardIndex],
+            title: cardData.title,
+            description: cardData.description,
+            dueDate: cardData.dueDate,
+          };
           toast.success("Cartão atualizado com sucesso!");
         } else {
           toast.warn("Cartão não encontrado para atualização.");
         }
+  
       } else {
-        // Novo cartão
         const columnIndex = columnToAddCard;
-        const newCard = await createCard(board.id, board.columns[columnIndex].id, cardData);
+        const payload = {
+          board_id: board.id,
+          column_id: board.columns[columnIndex].id,
+          title: cardData.title,
+          description: cardData.description,
+          due_date: cardData.dueDate,
+        };
+  
+        const created = await createTask(payload);
+  
+        const newCard = {
+          id: String(created.id),
+          title: created.title,
+          description: created.description,
+          dueDate: created.due_date,
+          createdAt: created.created_at,
+        };
+  
         board.columns[columnIndex].cards.push(newCard);
         toast.success("Cartão criado com sucesso!");
       }
-
+  
       setBoards(updatedBoards);
       setShowCreateCardModal(false);
       setCardToEdit(null);
@@ -332,6 +379,7 @@ const BoardWorkspace = () => {
       toast.error("Erro ao salvar o cartão.");
     }
   };
+  
 
 
   const handleDeleteCard = (card) => {
@@ -339,23 +387,36 @@ const BoardWorkspace = () => {
     setShowDeleteCardConfirmModal(true);
   };
 
-  const confirmDeleteCard = () => {
+  const confirmDeleteCard = async () => {
     const updatedBoards = structuredClone(boards);
+    const board = updatedBoards[selectedBoardIndex];
     const columnIndex = cardToDelete.columnIndex;
-
-    updatedBoards[selectedBoardIndex].columns[columnIndex].cards =
-      updatedBoards[selectedBoardIndex].columns[columnIndex].cards.filter(
+  
+    try {
+      const payload = {
+        board_id: board.id,
+        column_id: board.columns[columnIndex].id,
+        task_id: cardToDelete.id,
+      };
+  
+      await deleteTask(payload);
+  
+      board.columns[columnIndex].cards = board.columns[columnIndex].cards.filter(
         (c) => c.id !== cardToDelete.id
       );
-
-    setBoards(updatedBoards);
+  
+      setBoards(updatedBoards);
+      toast.success("Cartão excluído com sucesso!");
+    } catch (error) {
+      console.error("Erro ao excluir cartão:", error);
+      toast.error("Erro ao excluir o cartão.");
+    }
+  
     setCardToDelete(null);
     setShowDeleteCardConfirmModal(false);
     setShowCreateCardModal(false);
     setCardToEdit(null);
-
-    toast.success("Cartão excluído com sucesso!");
-  };
+  };  
 
   const handleDragEnd = async (result) => {
     const { source, destination } = result;
@@ -400,7 +461,6 @@ const BoardWorkspace = () => {
     const normalizedColumns = columns.map((col) => ({
       ...col,
       id: String(col.id),
-      name: col.title,
       cards: col.cards?.map((card) => ({
         ...card,
         id: String(card.id),

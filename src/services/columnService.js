@@ -1,6 +1,7 @@
 // src/services/columnService.js
 import axios from "axios";
 import { API_URL } from "../config";
+import { getTasks } from "./taskService";
 
 export async function createColumn(boardId, title) {
     const token = localStorage.getItem("access_token");
@@ -113,13 +114,31 @@ export async function createColumn(boardId, title) {
   
     try {
       const response = await axios.get(`${API_URL}/column/${boardId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
   
       if (response.status === 200) {
-        return response.data.columns;
+        const rawColumns = response.data.columns || [];
+  
+        const enrichedColumns = await Promise.all(
+          rawColumns.map(async (col) => {
+            const tasks = await getTasks(boardId, col.id);
+  
+            return {
+              id: String(col.id),
+              name: col.title,
+              cards: tasks.map((task) => ({
+                id: String(task.id),
+                title: task.title,
+                description: task.description,
+                dueDate: task.due_date,
+                createdAt: task.created_at,
+              })),
+            };
+          })
+        );
+  
+        return enrichedColumns;
       } else {
         return [];
       }
@@ -128,6 +147,7 @@ export async function createColumn(boardId, title) {
       return [];
     }
   };
+  
   
 
   
