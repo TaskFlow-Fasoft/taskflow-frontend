@@ -25,6 +25,16 @@ import {
 import LogoIcon from "../../assets/Logo Icone.png";
 import { toast } from "react-toastify";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { createBoard } from "../../services/boardService";
+import { deleteBoard } from "../../services/boardService"; 
+import { updateBoard } from "../../services/boardService";
+import { createColumn } from "../../services/columnService";
+import { updateColumn } from "../../services/columnService";
+import { deleteColumn } from "../../services/columnService";
+import { getBoardColumns } from "../../services/columnService";
+import { createTask } from "../../services/taskService";
+import { updateTask } from "../../services/taskService";
+import { deleteTask } from "../../services/taskService";
 
 
 const BoardWorkspace = () => {
@@ -132,15 +142,25 @@ const BoardWorkspace = () => {
     setShowDeleteColumnModal(true);
   };
 
-  const handleConfirmDeleteColumn = () => {
-    setBoards((prevBoards) => {
-      const updatedBoards = structuredClone(prevBoards);
-      updatedBoards[selectedBoardIndex].columns = updatedBoards[selectedBoardIndex].columns.filter(
-        (_, index) => index !== columnToDeleteIndex
-      );
-      return updatedBoards;
-    });
-
+  const handleConfirmDeleteColumn = async () => {
+    const board = boards[selectedBoardIndex];
+    const column = board.columns[columnToDeleteIndex];
+  
+    const result = await deleteColumn(board.id, column.id);
+  
+    if (result.success) {
+      setBoards((prevBoards) => {
+        const updatedBoards = structuredClone(prevBoards);
+        updatedBoards[selectedBoardIndex].columns = updatedBoards[selectedBoardIndex].columns.filter(
+          (_, index) => index !== columnToDeleteIndex
+        );
+        return updatedBoards;
+      });
+      toast.success("Coluna excluída com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao excluir coluna.");
+    }
+  
     setShowDeleteColumnModal(false);
     setColumnMenu(null);
   };
@@ -151,23 +171,40 @@ const BoardWorkspace = () => {
     setShowRenameColumnModal(true);
   };
 
-  const handleConfirmRenameColumn = (newName) => {
-    setBoards((prev) => {
-      const updated = [...prev];
-      updated[selectedBoardIndex].columns[columnToRename].name = newName;
-      return updated;
-    });
+  const handleConfirmRenameColumn = async (newName) => {
+    const board = boards[selectedBoardIndex];
+    const column = board.columns[columnToRename];
+  
+    const result = await updateColumn(board.id, column.id, newName);
+  
+    if (result.success) {
+      setBoards((prev) => {
+        const updated = [...prev];
+        updated[selectedBoardIndex].columns[columnToRename].name = newName;
+        return updated;
+      });
+      toast.success("Coluna renomeada com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao renomear coluna.");
+    }
+  
     setShowRenameColumnModal(false);
   };
+  
 
-  const handleCreateBoard = (newBoard) => {
-    const newBoardWithColumns = {
-      ...newBoard,
-      columns: [], // Inicializa com colunas vazias
-      id: Date.now() // Garantir que o quadro tenha um ID único
-    };
-    setBoards((prev) => [...prev, newBoardWithColumns]);
+  const handleCreateBoard = async (newBoard) => {
+    const { name } = newBoard;
+  
+    const result = await createBoard(name);
+  
+    if (result.success) {
+      setBoards((prev) => [...prev, result.board]);
+    } else {
+      console.error(result.message);
+      toast.error("Erro ao criar quadro.");
+    }
   };
+  
 
   const handleMenuToggle = (index, event) => {
     event.stopPropagation();
@@ -188,47 +225,78 @@ const BoardWorkspace = () => {
     setActiveMenuIndex(null);
   };
 
-  const confirmDeleteBoard = () => {
-    setBoards((prev) => prev.filter((_, i) => i !== deleteIndex));
-    if (selectedBoardIndex === deleteIndex) {
-      setSelectedBoardIndex(null);
+  const confirmDeleteBoard = async () => {
+    const boardId = boards[deleteIndex]?.id;
+    const result = await deleteBoard(boardId);
+  
+    if (result.success) {
+      setBoards((prev) => prev.filter((_, i) => i !== deleteIndex));
+      if (selectedBoardIndex === deleteIndex) {
+        setSelectedBoardIndex(null);
+      }
+      toast.success("Quadro excluído com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao excluir quadro.");
     }
+  
     setShowDeleteModal(false);
   };
+  
 
-  const handleConfirmRename = (newName) => {
-    setBoards((prev) => {
-      const updated = [...prev];
-      updated[renameIndex].name = newName;
-      return updated;
-    });
+  const handleConfirmRename = async (newName) => {
+    const board = boards[renameIndex];
+    const result = await updateBoard(board.id, newName);
+  
+    if (result.success) {
+      setBoards((prev) => {
+        const updated = [...prev];
+        updated[renameIndex].name = newName;
+        return updated;
+      });
+      toast.success("Quadro renomeado com sucesso!");
+    } else {
+      toast.error(result.message || "Erro ao renomear quadro.");
+    }
+  
     setRenameIndex(null);
     setShowRenameModal(false);
   };
+  
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userEmail");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("expires_at");
     setUserMenuOpen(false);
     navigate("/login");
   };
 
-  const handleCreateColumn = (columnName) => {
+  const handleCreateColumn = async (columnName) => {
     if (selectedBoardIndex !== null) {
-      const newColumn = {
-        id: Date.now(), // Gerar um ID único
-        name: columnName,
-        cards: [], // Inicializa com cartões vazios
-      };
-
-      // Atualiza o quadro selecionado com a nova coluna
-      setBoards((prevBoards) => {
-        const updatedBoards = [...prevBoards];
-        updatedBoards[selectedBoardIndex].columns.push(newColumn);
-        return updatedBoards;
-      });
+      const board = boards[selectedBoardIndex];
+      const result = await createColumn(board.id, columnName);
+  
+      if (result.success && result.column) {
+        const normalizedColumn = {
+          ...result.column,
+          id: String(result.column.id),
+          name: columnName, // <- agora renderiza corretamente
+          cards: [],
+        };
+  
+        setBoards((prevBoards) => {
+          const updated = structuredClone(prevBoards);
+          updated[selectedBoardIndex].columns.push(normalizedColumn);
+          return updated;
+        });
+  
+        toast.success("Coluna criada com sucesso!");
+      } else {
+        toast.error(result.message || "Erro ao criar coluna.");
+      }
     }
-  };
+  };  
+
+  
 
   const handleCreateCardClick = (colIndex) => {
     setColumnToAddCard(colIndex);
@@ -238,28 +306,71 @@ const BoardWorkspace = () => {
   const handleCreateCard = async (cardData) => {
     const updatedBoards = structuredClone(boards);
     const board = updatedBoards[selectedBoardIndex];
-
+  
     try {
-      // Verifica se é edição
       if (cardData.id) {
-        const columnIndex = cardData.columnIndex ?? columnToAddCard;
+        let columnIndex = cardData.columnIndex;
+        if (columnIndex === undefined || columnIndex === null) {
+          columnIndex = board.columns.findIndex((col) =>
+            col.cards.some((card) => card.id === cardData.id)
+          );
+        }
+        
+        if (columnIndex === -1) {
+          toast.error("Coluna do cartão não encontrada.");
+          return;
+        }
+        
+        const payload = {
+          board_id: board.id,
+          column_id: board.columns[columnIndex].id,
+          task_id: cardData.id,
+          title: cardData.title,
+          description: cardData.description,
+          due_date: cardData.dueDate,
+        };
+  
+        await updateTask(payload);
+  
         const cards = board.columns[columnIndex].cards;
-
         const cardIndex = cards.findIndex((c) => c.id === cardData.id);
+  
         if (cardIndex !== -1) {
-          cards[cardIndex] = { ...cards[cardIndex], ...cardData };
+          cards[cardIndex] = {
+            ...cards[cardIndex],
+            title: cardData.title,
+            description: cardData.description,
+            dueDate: cardData.dueDate,
+          };
           toast.success("Cartão atualizado com sucesso!");
         } else {
           toast.warn("Cartão não encontrado para atualização.");
         }
+  
       } else {
-        // Novo cartão
         const columnIndex = columnToAddCard;
-        const newCard = await createCard(board.id, board.columns[columnIndex].id, cardData);
+        const payload = {
+          board_id: board.id,
+          column_id: board.columns[columnIndex].id,
+          title: cardData.title,
+          description: cardData.description,
+          due_date: cardData.dueDate,
+        };
+  
+        const created = await createTask(payload);
+  
+        const newCard = {
+          id: String(created.id),
+          title: created.title,
+          description: created.description,
+          dueDate: created.due_date,
+          createdAt: created.created_at,
+        };
+  
         board.columns[columnIndex].cards.push(newCard);
         toast.success("Cartão criado com sucesso!");
       }
-
+  
       setBoards(updatedBoards);
       setShowCreateCardModal(false);
       setCardToEdit(null);
@@ -268,6 +379,7 @@ const BoardWorkspace = () => {
       toast.error("Erro ao salvar o cartão.");
     }
   };
+  
 
 
   const handleDeleteCard = (card) => {
@@ -275,23 +387,36 @@ const BoardWorkspace = () => {
     setShowDeleteCardConfirmModal(true);
   };
 
-  const confirmDeleteCard = () => {
+  const confirmDeleteCard = async () => {
     const updatedBoards = structuredClone(boards);
+    const board = updatedBoards[selectedBoardIndex];
     const columnIndex = cardToDelete.columnIndex;
-
-    updatedBoards[selectedBoardIndex].columns[columnIndex].cards =
-      updatedBoards[selectedBoardIndex].columns[columnIndex].cards.filter(
+  
+    try {
+      const payload = {
+        board_id: board.id,
+        column_id: board.columns[columnIndex].id,
+        task_id: cardToDelete.id,
+      };
+  
+      await deleteTask(payload);
+  
+      board.columns[columnIndex].cards = board.columns[columnIndex].cards.filter(
         (c) => c.id !== cardToDelete.id
       );
-
-    setBoards(updatedBoards);
+  
+      setBoards(updatedBoards);
+      toast.success("Cartão excluído com sucesso!");
+    } catch (error) {
+      console.error("Erro ao excluir cartão:", error);
+      toast.error("Erro ao excluir o cartão.");
+    }
+  
     setCardToDelete(null);
     setShowDeleteCardConfirmModal(false);
     setShowCreateCardModal(false);
     setCardToEdit(null);
-
-    toast.success("Cartão excluído com sucesso!");
-  };
+  };  
 
   const handleDragEnd = async (result) => {
     const { source, destination } = result;
@@ -327,8 +452,28 @@ const BoardWorkspace = () => {
     }
   };
 
-
-
+  const handleSelectBoard = async (index) => {
+    setSelectedBoardIndex(index);
+  
+    const board = boards[index];
+    const columns = await getBoardColumns(board.id);
+  
+    const normalizedColumns = columns.map((col) => ({
+      ...col,
+      id: String(col.id),
+      cards: col.cards?.map((card) => ({
+        ...card,
+        id: String(card.id),
+      })) || [],
+    }));
+  
+    setBoards((prevBoards) => {
+      const updated = [...prevBoards];
+      updated[index].columns = normalizedColumns;
+      return updated;
+    });
+  };  
+  
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
@@ -408,10 +553,10 @@ const BoardWorkspace = () => {
                   className={`${styles.boardItem} ${selectedBoardIndex === index ? styles.activeBoard : ""
                     }`}
                 >
-                  <div
-                    className={styles.boardContent}
-                    onClick={() => setSelectedBoardIndex(index)}
-                  >
+<div
+  className={styles.boardContent}
+  onClick={() => handleSelectBoard(index)}
+>
                     <span className={styles.pinIcon}>📌</span>
                     {board.name}
                   </div>
@@ -628,13 +773,6 @@ const BoardWorkspace = () => {
           boardName={boards[deleteIndex]?.name}
           onCancel={() => setShowDeleteModal(false)}
           onConfirm={confirmDeleteBoard}
-        />
-      )}
-
-      {showCreateColumnModal && (
-        <CreateColumnModal
-          onClose={() => setShowCreateColumnModal(false)}
-          onCreate={handleCreateColumn}
         />
       )}
 
