@@ -1,12 +1,39 @@
-# React + Vite
+# TaskFlow - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este repositório contém o código-fonte do frontend do **TaskFlow**, uma aplicação web de gerenciamento de tarefas baseada no modelo Kanban.
 
-Currently, two official plugins are available:
+## Tecnologias
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React.js** – Construção da interface do usuário
+- **Vite** – Bundler rápido e leve
+- **Axios** – Requisições HTTP à API
+- **React Router** – Gerenciamento de rotas
+- **React Beautiful DnD** – Funcionalidade de arrastar e soltar (drag-and-drop)
 
-## Expanding the ESLint configuration
+## Instalação
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Requisitos:
+- Node.js 18+
+- NPM ou Yarn
+
+### Passos:
+```bash
+git clone https://github.com/Enildo-Martins/taskflow-frontend.git
+cd taskflow-frontend
+npm install
+npm run dev
+```
+
+Funcionalidades
+Login e cadastro de usuários
+
+Criação de quadros e colunas
+
+Criação, edição e movimentação de tarefas com drag-and-drop
+
+Desenvolvedores
+Enildo Martins
+Maria Eduarda Goetz
+João Lázaro
+
+- Projeto desenvolvido como parte da disciplina de Processo de Software na Universidade de Rio Verde.
