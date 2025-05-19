@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const API_URL = 'http://25.59.132.184:8000'; // Ajuste conforme o backend
+const API_URL = import.meta.env.API_URL; // Ajuste conforme o backend
 
 export const register = async (username, email, password) => {
   try {
