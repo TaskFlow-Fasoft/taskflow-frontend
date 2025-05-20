@@ -1,12 +1,12 @@
 import axios from "axios";
-import { API_URL } from "../config";
+import { VITE_API_URL } from "../config";
 
 const getToken = () => localStorage.getItem("access_token");
 
 export async function createTask({ board_id, column_id, title, description, due_date }) {
   try {
     const response = await axios.post(
-      `${API_URL}/tasks`,
+      `${VITE_API_URL}/tasks`,
       { board_id, column_id, title, description, due_date },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
@@ -20,7 +20,7 @@ export async function createTask({ board_id, column_id, title, description, due_
 export async function getTasks(boardId, columnId) {
   try {
     const response = await axios.get(
-      `${API_URL}/tasks?board_id=${boardId}&column_id=${columnId}`,
+      `${VITE_API_URL}/tasks?board_id=${boardId}&column_id=${columnId}`,
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
     return response.data.tasks;
@@ -33,7 +33,7 @@ export async function getTasks(boardId, columnId) {
 export async function updateTask({ board_id, column_id, task_id, title, description, due_date }) {
   try {
     const response = await axios.put(
-      `${API_URL}/tasks`,
+      `${VITE_API_URL}/tasks`,
       { board_id, column_id, task_id, title, description, due_date },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
@@ -46,7 +46,7 @@ export async function updateTask({ board_id, column_id, task_id, title, descript
 
 export async function deleteTask({ board_id, column_id, task_id }) {
   try {
-    const response = await axios.delete(`${API_URL}/tasks`, {
+    const response = await axios.delete(`${VITE_API_URL}/tasks`, {
       headers: { Authorization: `Bearer ${getToken()}` },
       data: { board_id, column_id, task_id },
     });

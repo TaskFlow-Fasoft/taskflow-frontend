@@ -2,12 +2,12 @@
 
 import axios from 'axios';
 
-const API_URL = import.meta.env.API_URL; // Ajuste conforme o backend
+const VITE_API_URL = import.meta.env.VITE_API_URL; // Ajuste conforme o backend
 
 export const register = async (username, email, password) => {
   try {
     // Faz a requisição POST para o backend para registrar o usuário
-    const response = await axios.post(`${API_URL}/auth/register`, {
+    const response = await axios.post(`${VITE_API_URL}/auth/register`, {
       username,
       email,
       password
@@ -26,6 +26,7 @@ export const register = async (username, email, password) => {
     }
   } catch (error) {
     console.error('Erro ao tentar registrar:', error);
+    console.log(error);
     return {
       success: false,
       message: error.response ? error.response.data.message : 'Erro desconhecido ao tentar registrar.',
