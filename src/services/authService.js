@@ -2,12 +2,12 @@
 
 import axios from 'axios';
 
-const API_URL = 'http://25.59.132.184:8000'; // ajuste conforme o backend
+const VITE_API_URL = import.meta.env.VITE_API_URL; // ajuste conforme o backend
 
 export const login = async (email, password) => {
   try {
     // Realiza a requisição ao backend utilizando Axios
-    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+    const response = await axios.post(`${VITE_API_URL}/auth/login`, { email, password });
 
     // Verifica se a resposta foi bem-sucedida
     if (response.status === 200) {

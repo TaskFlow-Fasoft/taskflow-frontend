@@ -1,6 +1,6 @@
 // src/services/columnService.js
 import axios from "axios";
-import { API_URL } from "../config";
+import { VITE_API_URL } from "../config";
 import { getTasks } from "./taskService";
 
 export async function createColumn(boardId, title) {
@@ -8,7 +8,7 @@ export async function createColumn(boardId, title) {
   
     try {
       const response = await axios.post(
-        `${API_URL}/column`,
+        `${VITE_API_URL}/column`,
         {
           board_id: boardId,
           title
@@ -49,7 +49,7 @@ export async function createColumn(boardId, title) {
   
     try {
       const response = await axios.put(
-        `${API_URL}/column/${boardId}`,
+        `${VITE_API_URL}/column/${boardId}`,
         {
           column_id: columnId,
           title
@@ -82,7 +82,7 @@ export async function createColumn(boardId, title) {
     const token = localStorage.getItem("access_token");
   
     try {
-      const response = await axios.delete(`${API_URL}/column`, {
+      const response = await axios.delete(`${VITE_API_URL}/column`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -113,7 +113,7 @@ export async function createColumn(boardId, title) {
     const token = localStorage.getItem("access_token");
   
     try {
-      const response = await axios.get(`${API_URL}/column/${boardId}`, {
+      const response = await axios.get(`${VITE_API_URL}/column/${boardId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   

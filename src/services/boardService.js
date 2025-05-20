@@ -1,11 +1,11 @@
 import axios from "axios";
-import { API_URL } from "../config";
+import { VITE_API_URL } from "../config";
 
 export async function getBoards() {
   const token = localStorage.getItem("access_token");
 
   try {
-    const boardResponse = await axios.get(`${API_URL}/boards`, {
+    const boardResponse = await axios.get(`${VITE_API_URL}/boards`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -14,7 +14,7 @@ export async function getBoards() {
     const boardsWithColumns = await Promise.all(
       boards.map(async (board) => {
         try {
-          const colRes = await axios.get(`${API_URL}/column/${board.id}`, {
+          const colRes = await axios.get(`${VITE_API_URL}/column/${board.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
 
@@ -57,7 +57,7 @@ export async function createBoard(title) {
 
   try {
     const response = await axios.post(
-      `${API_URL}/boards`,
+      `${VITE_API_URL}/boards`,
       { title },
       {
         headers: {
@@ -90,7 +90,7 @@ export async function deleteBoard(boardId) {
   const token = localStorage.getItem("access_token");
 
   try {
-    const response = await axios.delete(`${API_URL}/boards/${boardId}`, {
+    const response = await axios.delete(`${VITE_API_URL}/boards/${boardId}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -114,7 +114,7 @@ export async function updateBoard(boardId, newTitle) {
   const token = localStorage.getItem("access_token");
   try {
     const response = await axios.put(
-      `${API_URL}/boards/${boardId}`,
+      `${VITE_API_URL}/boards/${boardId}`,
       { title: newTitle },
       {
         headers: {
