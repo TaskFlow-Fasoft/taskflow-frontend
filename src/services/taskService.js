@@ -18,14 +18,21 @@ export async function createTask({ board_id, column_id, title, description, due_
 }
 
 export async function getTasks(boardId, columnId) {
+  if (!boardId || !columnId) {
+    console.error("ID de quadro ou coluna ausente");
+    return [];
+  }
+
   try {
+    console.log("Requisição GET /tasks com:", { boardId, columnId });
+
     const response = await axios.get(
       `${VITE_API_URL}/tasks?board_id=${boardId}&column_id=${columnId}`,
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
     return response.data.tasks;
   } catch (error) {
-    console.error("Erro ao buscar tarefas:", error);
+    console.error("Erro ao buscar tarefas:", error.response?.data || error.message);
     return [];
   }
 }
@@ -53,6 +60,26 @@ export async function deleteTask({ board_id, column_id, task_id }) {
     return response.data;
   } catch (error) {
     console.error("Erro ao deletar tarefa:", error);
+    throw error;
+  }
+}
+
+export async function updateTaskOrder(boardId, columnId, taskId, newColumnId, newPosition) {
+  try {
+    const response = await axios.put(
+      `${VITE_API_URL}/tasks/order`,
+      { 
+        board_id: boardId,
+        column_id: columnId,
+        task_id: taskId,
+        new_column_id: newColumnId,
+        new_position: newPosition
+      },
+      { headers: { Authorization: `Bearer ${getToken()}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao atualizar ordem da tarefa:", error);
     throw error;
   }
 }
