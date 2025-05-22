@@ -37,11 +37,21 @@ export async function getTasks(boardId, columnId) {
   }
 }
 
-export async function updateTask({ board_id, column_id, task_id, title, description, due_date }) {
+export async function updateTask({ board_id, column_id, old_column_id, task_id, title, description, due_date }) {
   try {
+    console.log('Payload enviado para updateTask:', {
+      board_id,
+      column_id,
+      old_column_id,
+      task_id,
+      title,
+      description,
+      due_date,
+    });
+
     const response = await axios.put(
       `${VITE_API_URL}/tasks`,
-      { board_id, column_id, task_id, title, description, due_date },
+      { board_id, column_id, old_column_id, task_id, title, description, due_date },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
     return response.data;
@@ -60,26 +70,6 @@ export async function deleteTask({ board_id, column_id, task_id }) {
     return response.data;
   } catch (error) {
     console.error("Erro ao deletar tarefa:", error);
-    throw error;
-  }
-}
-
-export async function updateTaskOrder(boardId, columnId, taskId, newColumnId, newPosition) {
-  try {
-    const response = await axios.put(
-      `${VITE_API_URL}/tasks/order`,
-      { 
-        board_id: boardId,
-        column_id: columnId,
-        task_id: taskId,
-        new_column_id: newColumnId,
-        new_position: newPosition
-      },
-      { headers: { Authorization: `Bearer ${getToken()}` } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Erro ao atualizar ordem da tarefa:", error);
     throw error;
   }
 }

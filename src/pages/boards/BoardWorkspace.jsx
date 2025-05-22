@@ -426,14 +426,15 @@ const BoardWorkspace = () => {
     const updatedBoards = structuredClone(boards);
     const board = updatedBoards[selectedBoardIndex];
 
-    const sourceColId = source.droppableId.replace('col-', '');
-    const destColId = destination.droppableId.replace('col-', '');
+    // IDs puros (números)
+    const sourceColId = Number(source.droppableId.replace('col-', ''));
+    const destColId = Number(destination.droppableId.replace('col-', ''));
 
     const sourceColIndex = board.columns.findIndex(
-      (col) => col.id === source.droppableId
+      (col) => Number(col.id.replace('col-', '')) === sourceColId
     );
     const destColIndex = board.columns.findIndex(
-      (col) => col.id === destination.droppableId
+      (col) => Number(col.id.replace('col-', '')) === destColId
     );
 
     if (sourceColIndex === -1 || destColIndex === -1) return;
@@ -451,27 +452,31 @@ const BoardWorkspace = () => {
     // Só atualiza no backend se mudou de coluna
     if (sourceColId !== destColId) {
       try {
-        const cardId = movedCard.id.replace('card-', '');
-        // Pega o id real da coluna de destino do objeto coluna
-        const destColIdNumber = Number(destCol.id.replace('col-', ''));
-        console.log('Payload enviado para updateTask:', {
-          board_id: Number(board.id),
-          task_id: Number(cardId),
-          column_id: destColIdNumber,
-          title: movedCard.title ?? '',
-          description: movedCard.description ?? '',
-          due_date: movedCard.dueDate ?? null,
-        });
+        console.log('Card sendo movido (do estado do frontend ANTES do move visual):', movedCard);
+        console.log('source.droppableId (coluna de origem na UI):', source.droppableId);
+
+        const cardId = Number(movedCard.id.replace('card-', ''));
+
+        // Novo: Usar movedCard.column_id se disponível
+        const oldColumnIdToSend = movedCard.column_id
+          ? Number(movedCard.column_id.toString().replace('col-', '')) // Garantir que é string antes de replace
+          : sourceColId;
+
+        console.log('Usando old_column_id para enviar:', oldColumnIdToSend);
+
         await updateTask({
           board_id: Number(board.id),
-          task_id: Number(cardId),
-          column_id: destColIdNumber,
+          task_id: cardId,
+          old_column_id: oldColumnIdToSend,
+          column_id: destColId,
           title: movedCard.title ?? '',
           description: movedCard.description ?? '',
           due_date: movedCard.dueDate ?? null,
         });
-      } catch {
-        toast.error('Erro ao mover o card!');
+      } catch (error) {
+        console.error('Erro detalhado ao mover o card:', error.response?.data || error.message);
+        const errorMessage = error.response?.data?.detail || 'Erro desconhecido ao mover o card.';
+        toast.error(`Não foi possível mover o card: ${errorMessage}`);
         // Reverte no front se der erro
         const revertedBoards = structuredClone(boards);
         setBoards(revertedBoards);
@@ -644,7 +649,7 @@ const BoardWorkspace = () => {
                   {boards[selectedBoardIndex]?.columns?.length > 0 ? (
                     <>
                       {boards[selectedBoardIndex].columns.map((column, colIndex) => {
-                        console.log("Rendering column:", { id: column.id, name: column.name });
+                        console.log("Rendering column:", JSON.stringify(column));
                         return (
                           <Droppable droppableId={column.id} key={column.id}>
                             {(provided) => (
@@ -698,7 +703,7 @@ const BoardWorkspace = () => {
                                   {column.cards?.length > 0 ? (
                                     column.cards.map((card, cardIndex) => {
                                       if (!card) return null; // Skip undefined cards
-                                      console.log("Rendering card:", { id: card.id, title: card.title });
+                                      console.log("Rendering card:", JSON.stringify(card));
                                       return (
                                         <Draggable draggableId={card.id} index={cardIndex} key={card.id}>
                                           {(provided) => (

@@ -109,44 +109,39 @@ export async function createColumn(boardId, title) {
     }
   }
 
-  export const getBoardColumns = async (boardId) => {
-    const token = localStorage.getItem("access_token");
-  
+  const getToken = () => localStorage.getItem("access_token");
+
+  export async function getBoardColumns(boardId) {
     try {
-      const response = await axios.get(`${VITE_API_URL}/column/${boardId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const columnsData = await axios.get(`${VITE_API_URL}/column/${boardId}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
-  
-      if (response.status === 200) {
-        const rawColumns = response.data.columns || [];
-  
-        const enrichedColumns = await Promise.all(
-          rawColumns.map(async (col) => {
-            const tasks = await getTasks(boardId, col.id);
-  
+
+      const columns = columnsData.data.columns || [];
+
+      const columnsWithTasks = await Promise.all(
+        columns.map(async (column) => {
+          try {
+            const tasks = await getTasks(boardId, column.id);
             return {
-              id: String(col.id),
-              name: col.title,
-              cards: tasks.map((task) => ({
-                id: String(task.id),
-                title: task.title,
-                description: task.description,
-                dueDate: task.due_date,
-                createdAt: task.created_at,
-              })),
+              ...column,
+              cards: tasks || []
             };
-          })
-        );
-  
-        return enrichedColumns;
-      } else {
-        return [];
-      }
+          } catch (taskError) {
+            console.error(`Erro ao buscar tasks para a coluna ${column.id}:`, taskError.response?.data || taskError.message);
+            return { ...column, cards: [] };
+          }
+        })
+      );
+
+      // Retorna os dados como vieram do backend após buscar as tasks
+      return columnsWithTasks;
+
     } catch (error) {
-      console.error("Erro ao buscar colunas:", error);
-      return [];
+      console.error("Erro ao buscar colunas:", error.response?.data || error.message);
+      throw error;
     }
-  };
+  }
   
   
 
