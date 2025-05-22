@@ -25,7 +25,7 @@ export async function createColumn(boardId, title) {
           success: true,
           column: {
             id: String(response.data.id),
-            name: response.data.title, // converte para 'name' porque o front usa isso
+            title: response.data.title,
             cards: []
           }
         };
@@ -48,10 +48,13 @@ export async function createColumn(boardId, title) {
     const token = localStorage.getItem("access_token");
   
     try {
+      const cleanedBoardId = boardId.toString().replace('col-', '');
+      const cleanedColumnId = columnId.toString().replace('col-', '');
+
       const response = await axios.put(
-        `${VITE_API_URL}/column/${boardId}`,
+        `${VITE_API_URL}/column/${cleanedBoardId}`,
         {
-          column_id: columnId,
+          column_id: cleanedColumnId,
           title
         },
         {
@@ -82,12 +85,13 @@ export async function createColumn(boardId, title) {
     const token = localStorage.getItem("access_token");
   
     try {
+      const cleanedColumnId = columnId.replace('col-', '');
       const response = await axios.delete(`${VITE_API_URL}/column`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
         data: {
-          id: columnId,
+          id: cleanedColumnId,
           board_id: boardId
         }
       });
@@ -134,7 +138,12 @@ export async function createColumn(boardId, title) {
         })
       );
 
-      // Retorna os dados como vieram do backend após buscar as tasks
+      // Ordenar colunas por data de criação (mais antiga primeiro)
+      columnsWithTasks.sort((a, b) => {
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+
+      // Retorna os dados ordenados
       return columnsWithTasks;
 
     } catch (error) {

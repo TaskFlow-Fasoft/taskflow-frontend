@@ -15,7 +15,8 @@ export const login = async (email, password) => {
       return {
         success: true,
         access_token: response.data.access_token,
-        expires_at: response.data.expires_at
+        expires_at: response.data.expires_at,
+        username: response.data.username
       };
     } else {
       // Em caso de resposta diferente de 200, retorna falha

@@ -39,11 +39,16 @@ export async function getTasks(boardId, columnId) {
 
 export async function updateTask({ board_id, column_id, old_column_id, task_id, title, description, due_date }) {
   try {
+    const cleanedBoardId = board_id.toString().replace('col-', '');
+    const cleanedColumnId = column_id.toString().replace('col-', '');
+    const cleanedOldColumnId = old_column_id.toString().replace('col-', '');
+    const cleanedTaskId = task_id.toString().replace('card-', '');
+
     console.log('Payload enviado para updateTask:', {
-      board_id,
-      column_id,
-      old_column_id,
-      task_id,
+      board_id: cleanedBoardId,
+      column_id: cleanedColumnId,
+      old_column_id: cleanedOldColumnId,
+      task_id: cleanedTaskId,
       title,
       description,
       due_date,
@@ -51,7 +56,7 @@ export async function updateTask({ board_id, column_id, old_column_id, task_id, 
 
     const response = await axios.put(
       `${VITE_API_URL}/tasks`,
-      { board_id, column_id, old_column_id, task_id, title, description, due_date },
+      { board_id: cleanedBoardId, column_id: cleanedColumnId, old_column_id: cleanedOldColumnId, task_id: cleanedTaskId, title, description, due_date },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
     return response.data;
@@ -63,9 +68,13 @@ export async function updateTask({ board_id, column_id, old_column_id, task_id, 
 
 export async function deleteTask({ board_id, column_id, task_id }) {
   try {
+    const cleanedBoardId = board_id.toString().replace('col-', '');
+    const cleanedColumnId = column_id.toString().replace('col-', '');
+    const cleanedTaskId = task_id.toString().replace('card-', '');
+
     const response = await axios.delete(`${VITE_API_URL}/tasks`, {
       headers: { Authorization: `Bearer ${getToken()}` },
-      data: { board_id, column_id, task_id },
+      data: { board_id: cleanedBoardId, column_id: cleanedColumnId, task_id: cleanedTaskId },
     });
     return response.data;
   } catch (error) {

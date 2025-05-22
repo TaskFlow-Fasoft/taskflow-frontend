@@ -59,6 +59,7 @@ const BoardWorkspace = () => {
   const [showDeleteCardConfirmModal, setShowDeleteCardConfirmModal] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
 
+  const [isSavingCard, setIsSavingCard] = useState(false);
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -66,8 +67,16 @@ const BoardWorkspace = () => {
   const userDropdownRef = useRef(null);
   const columnDropdownRef = useRef(null);
 
+  const [loggedInUserName, setLoggedInUserName] = useState("Carregando...");
 
-  const fakeUserName = "João da Silva";
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setLoggedInUserName(storedUsername);
+    } else {
+      setLoggedInUserName("Usuário");
+    }
+  }, []);
 
   useEffect(() => {
     const fetchBoards = async () => {
@@ -176,8 +185,8 @@ const BoardWorkspace = () => {
   
     if (result.success) {
       setBoards((prev) => {
-        const updated = [...prev];
-        updated[selectedBoardIndex].columns[columnToRename].name = newName;
+        const updated = structuredClone(prev);
+        updated[selectedBoardIndex].columns[columnToRename].title = newName;
         return updated;
       });
       toast.success("Coluna renomeada com sucesso!");
@@ -276,7 +285,6 @@ const BoardWorkspace = () => {
         const normalizedColumn = {
           ...result.column,
           id: String(result.column.id),
-          name: columnName, // <- agora renderiza corretamente
           cards: [],
         };
   
@@ -304,6 +312,8 @@ const BoardWorkspace = () => {
     const updatedBoards = structuredClone(boards);
     const board = updatedBoards[selectedBoardIndex];
   
+    setIsSavingCard(true);
+
     try {
       if (cardData.id) {
         let columnIndex = cardData.columnIndex;
@@ -318,10 +328,13 @@ const BoardWorkspace = () => {
           return;
         }
         
+        const currentColumnId = board.columns[columnIndex].id; // ID da coluna atual no frontend
+
         const payload = {
-          board_id: board.id,
-          column_id: board.columns[columnIndex].id,
-          task_id: cardData.id,
+          board_id: Number(board.id.toString().replace('col-', '')),
+          column_id: Number(currentColumnId.replace('col-', '')), // ID da coluna atual sem prefixo
+          old_column_id: Number(currentColumnId.replace('col-', '')), // Para edição, old_column_id é o mesmo que o current
+          task_id: Number(cardData.id.toString().replace('card-', '')),
           title: cardData.title,
           description: cardData.description,
           due_date: cardData.dueDate,
@@ -347,8 +360,8 @@ const BoardWorkspace = () => {
       } else {
         const columnIndex = columnToAddCard;
         const payload = {
-          board_id: board.id,
-          column_id: board.columns[columnIndex].id,
+          board_id: Number(board.id.toString().replace('col-', '')),
+          column_id: Number(board.columns[columnIndex].id.replace('col-', '')),
           title: cardData.title,
           description: cardData.description,
           due_date: cardData.dueDate,
@@ -369,11 +382,14 @@ const BoardWorkspace = () => {
       }
   
       setBoards(updatedBoards);
-      setShowCreateCardModal(false);
       setCardToEdit(null);
+      setShowCreateCardModal(false);
     } catch (error) {
       console.error("Erro ao salvar cartão:", error);
-      toast.error("Erro ao salvar o cartão.");
+      const errorMessage = error.response?.data?.detail || "Erro ao salvar o cartão.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSavingCard(false);
     }
   };
   
@@ -391,8 +407,8 @@ const BoardWorkspace = () => {
   
     try {
       const payload = {
-        board_id: board.id,
-        column_id: board.columns[columnIndex].id,
+        board_id: Number(board.id.toString().replace('col-', '')),
+        column_id: Number(board.columns[columnIndex].id.replace('col-', '')),
         task_id: cardToDelete.id,
       };
   
@@ -546,7 +562,7 @@ const BoardWorkspace = () => {
             <MenuPortal>
               <div className={styles.userMenu} ref={userDropdownRef}>
                 <div className={styles.userInfo}>
-                  <span className={styles.userDisplayName}>{fakeUserName}</span>
+                  <span className={styles.userDisplayName}>{loggedInUserName}</span>
                 </div>
                 <div className={styles.menuDivider}></div>
                 <button className={styles.userMenuItem} onClick={handleLogout}>
@@ -659,7 +675,7 @@ const BoardWorkspace = () => {
                                 {...provided.droppableProps}
                               >
                                 <div className={styles.columnHeader}>
-                                  <h3 className={styles.columnTitle}>{column.name}</h3>
+                                  <h3 className={styles.columnTitle}>{column.title}</h3>
                                   <FaEllipsisH
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -842,9 +858,10 @@ const BoardWorkspace = () => {
             setCardToEdit(null);
           }}
           onCreate={handleCreateCard}
-          onDelete={handleDeleteCard}  // ✅ nova prop
+          onDelete={handleDeleteCard}
           card={cardToEdit}
           isEditing={!!cardToEdit}
+          loading={isSavingCard}
         />
       )}
 

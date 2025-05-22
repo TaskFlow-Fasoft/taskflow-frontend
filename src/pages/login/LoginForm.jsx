@@ -36,6 +36,9 @@ const LoginForm = () => {
     if (response.success) {
       localStorage.setItem("access_token", response.access_token);
       localStorage.setItem("expires_at", response.expires_at);
+      if (response.username) {
+        localStorage.setItem("username", response.username);
+      }
       navigate("/boards");
     } else {
       setErrorMsg(response.message || "Falha na autenticação.");
