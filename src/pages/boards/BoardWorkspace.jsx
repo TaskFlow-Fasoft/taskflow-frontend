@@ -316,6 +316,7 @@ const BoardWorkspace = () => {
 
     try {
       if (cardData.id) {
+        console.log("Attempting to update card with payload:", cardData);
         let columnIndex = cardData.columnIndex;
         if (columnIndex === undefined || columnIndex === null) {
           columnIndex = board.columns.findIndex((col) =>
@@ -332,14 +333,16 @@ const BoardWorkspace = () => {
 
         const payload = {
           board_id: Number(board.id.toString().replace('col-', '')),
-          column_id: Number(currentColumnId.replace('col-', '')), // ID da coluna atual sem prefixo
-          old_column_id: Number(currentColumnId.replace('col-', '')), // Para edição, old_column_id é o mesmo que o current
+          column_id: Number(currentColumnId.replace('col-', '')),
+          old_column_id: Number(currentColumnId.replace('col-', '')),
           task_id: Number(cardData.id.toString().replace('card-', '')),
           title: cardData.title,
           description: cardData.description,
-          due_date: cardData.dueDate,
+          due_date: cardData.dueDate === '' ? null : cardData.dueDate,
         };
-  
+
+        console.log("Sending updateTask payload:", payload);
+
         await updateTask(payload);
   
         const cards = board.columns[columnIndex].cards;
@@ -364,7 +367,7 @@ const BoardWorkspace = () => {
           column_id: Number(board.columns[columnIndex].id.replace('col-', '')),
           title: cardData.title,
           description: cardData.description,
-          due_date: cardData.dueDate,
+          due_date: cardData.dueDate === '' ? null : cardData.dueDate,
         };
   
         const created = await createTask(payload);
