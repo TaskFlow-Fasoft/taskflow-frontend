@@ -74,6 +74,7 @@ const BoardWorkspace = () => {
   const userRef = useRef(null);
   const userDropdownRef = useRef(null);
   const columnDropdownRef = useRef(null);
+  const boardDropdownRef = useRef(null);
 
   const [loggedInUserName, setLoggedInUserName] = useState("Carregando...");
 
@@ -648,6 +649,43 @@ const BoardWorkspace = () => {
     });
   };  
   
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target) &&
+        userRef.current &&
+        !userRef.current.contains(event.target)
+      ) {
+        setUserMenuOpen(false);
+      }
+
+      if (
+        boardDropdownRef.current &&
+        !boardDropdownRef.current.contains(event.target) &&
+        activeMenuIndex !== null
+      ) {
+        const isToggleClick = event.target.closest(`.${styles.boardMenu}`) !== null;
+
+        if (!boardDropdownRef.current.contains(event.target) && !isToggleClick) {
+           setActiveMenuIndex(null);
+        }
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [userDropdownRef, userRef, boardDropdownRef, activeMenuIndex]);
+
+  useEffect(() => {
+    const handleClickOutsideColumnMenu = (e) => {
+      if (columnDropdownRef.current && !columnDropdownRef.current.contains(e.target)) {
+        setColumnMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutsideColumnMenu);
+    return () => document.removeEventListener("mousedown", handleClickOutsideColumnMenu);
+  }, [columnDropdownRef]);
+
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
@@ -740,7 +778,7 @@ const BoardWorkspace = () => {
                   {activeMenuIndex === index && (
                     <MenuPortal>
                       <div
-                        ref={columnDropdownRef}
+                        ref={boardDropdownRef}
                         className={styles.dropdownMenu}
                         style={{
                           top: menuPosition.top,
