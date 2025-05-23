@@ -1,5 +1,5 @@
 import axios from "axios";
-import { VITE_API_URL } from "../config";
+import { VITE_API_URL } from "../config/config";
 
 export async function getBoards() {
   const token = localStorage.getItem("access_token");

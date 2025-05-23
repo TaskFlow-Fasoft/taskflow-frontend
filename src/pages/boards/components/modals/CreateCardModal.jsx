@@ -25,7 +25,7 @@ const CreateCardModal = ({
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    },); 
 
     const validateTitle = (value) => {
         if (!value || value.trim() === '') {

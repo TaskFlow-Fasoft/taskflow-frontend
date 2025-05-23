@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "./styles/boardWorkspace.module.css";
 import { useNavigate } from "react-router-dom";
-import CreateBoardModal from "./CreateBoardModal";
-import CreateColumnModal from "./CreateColumnModal";
-import RenameBoardModal from "./RenameBoardModal";
-import DeleteConfirmModal from "./DeleteConfirmModal";
-import RenameColumnModal from "./RenameColumnModal";
-import DeleteCardConfirmModal from "./DeleteCardConfirmModal";
-import CreateCardModal from "./CreateCardModal";
-import DeleteColumnConfirmModal from "./DeleteColumnConfirmModal";
-import { getBoards } from "../../services/boardService";
-import MenuPortal from "./MenuPortal";
+import CreateBoardModal from "./components/modals/CreateBoardModal";
+import CreateColumnModal from "./components/modals/CreateColumnModal";
+import RenameBoardModal from "./components/modals/RenameBoardModal";
+import DeleteConfirmModal from "./components/modals/DeleteConfirmModal";
+import RenameColumnModal from "./components/modals/RenameColumnModal";
+import DeleteCardConfirmModal from "./components/modals/DeleteCardConfirmModal";
+import CreateCardModal from "./components/modals/CreateCardModal";
+import DeleteColumnConfirmModal from "./components/modals/DeleteColumnConfirmModal";
+import { getBoards } from "../../api/boardService";
+import MenuPortal from "../../components/MenuPortal";
 import {
   FaUserCircle,
   FaChevronLeft,
@@ -23,16 +23,16 @@ import {
 import LogoIcon from "../../assets/Logo Icone.png";
 import { toast } from "react-toastify";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { createBoard } from "../../services/boardService";
-import { deleteBoard } from "../../services/boardService"; 
-import { updateBoard } from "../../services/boardService";
-import { createColumn } from "../../services/columnService";
-import { updateColumn } from "../../services/columnService";
-import { deleteColumn } from "../../services/columnService";
-import { getBoardColumns } from "../../services/columnService";
-import { createTask } from "../../services/taskService";
-import { updateTask } from "../../services/taskService";
-import { deleteTask } from "../../services/taskService";
+import { createBoard } from "../../api/boardService";
+import { deleteBoard } from "../../api/boardService"; 
+import { updateBoard } from "../../api/boardService";
+import { createColumn } from "../../api/columnService";
+import { updateColumn } from "../../api/columnService";
+import { deleteColumn } from "../../api/columnService";
+import { getBoardColumns } from "../../api/columnService";
+import { createTask } from "../../api/taskService";
+import { updateTask } from "../../api/taskService";
+import { deleteTask } from "../../api/taskService";
 
 
 const BoardWorkspace = () => {

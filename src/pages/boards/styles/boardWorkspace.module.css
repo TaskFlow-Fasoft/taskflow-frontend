@@ -411,7 +411,7 @@
 }
 
 .columnContent {
-  /* flex-grow: 1; */ /* Removido para permitir que a altura seja determinada pelo conteúdo até o max-height */
+  flex-grow: 1;
   background: #ffffff;
   border-radius: 8px;
   padding: 0.75rem;
@@ -420,7 +420,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  overflow-y: auto;
+  overflow: hidden;
   max-height: calc(100vh - 280px);
 }
 
@@ -435,20 +435,22 @@
   background-color: #ffffff;
   border-radius: 8px;
   padding: 1rem;
-  margin-bottom: 0;
+  margin-bottom: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #d0d3d8;
   font-size: 1rem;
   font-weight: 500;
   color: #333;
   cursor: grab;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-color: #a5b4fc;
-  /* transform: translateY(-1px); */ /* Comentado para corrigir drag-and-drop */
 }
 
 .cardTitle {
@@ -612,4 +614,41 @@
 .addCardBtn:active {
   background-color: #255bb3;
   transform: scale(0.98);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.paginationButton {
+  background-color: #f0f2f5;
+  border: 1px solid #d0d3d8;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: #e3e5e8;
+  border-color: #b0b3b8;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0.5rem;
 }

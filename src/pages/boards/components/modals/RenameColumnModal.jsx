@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import styles from "./styles/renameBoardModal.module.css"; // Pode reutilizar
+import styles from "./styles/renameBoardModal.module.css";
 
 const RenameColumnModal = ({ columnName, onClose, onConfirm, loading }) => {
   const [name, setName] = useState(columnName);

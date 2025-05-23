@@ -1,4 +1,4 @@
-// src/services/authService.js
+// src/api/authService.js
 
 import axios from 'axios';
 

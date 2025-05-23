@@ -1,6 +1,6 @@
-// src/services/columnService.js
+// src/api/columnService.js
 import axios from "axios";
-import { VITE_API_URL } from "../config";
+import { VITE_API_URL } from "../config/config";
 import { getTasks } from "./taskService";
 
 export async function createColumn(boardId, title) {
