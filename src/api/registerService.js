@@ -1,4 +1,4 @@
-// src/services/registerService.js
+// src/api/registerService.js
 
 import axios from 'axios';
 

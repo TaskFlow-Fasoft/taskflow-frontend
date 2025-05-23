@@ -1,5 +1,5 @@
 import axios from "axios";
-import { VITE_API_URL } from "../config";
+import { VITE_API_URL } from "../config/config";
 
 const getToken = () => localStorage.getItem("access_token");
 
@@ -37,11 +37,26 @@ export async function getTasks(boardId, columnId) {
   }
 }
 
-export async function updateTask({ board_id, column_id, task_id, title, description, due_date }) {
+export async function updateTask({ board_id, column_id, old_column_id, task_id, title, description, due_date }) {
   try {
+    const cleanedBoardId = board_id.toString().replace('col-', '');
+    const cleanedColumnId = column_id.toString().replace('col-', '');
+    const cleanedOldColumnId = old_column_id.toString().replace('col-', '');
+    const cleanedTaskId = task_id.toString().replace('card-', '');
+
+    console.log('Payload enviado para updateTask:', {
+      board_id: cleanedBoardId,
+      column_id: cleanedColumnId,
+      old_column_id: cleanedOldColumnId,
+      task_id: cleanedTaskId,
+      title,
+      description,
+      due_date,
+    });
+
     const response = await axios.put(
       `${VITE_API_URL}/tasks`,
-      { board_id, column_id, task_id, title, description, due_date },
+      { board_id: cleanedBoardId, column_id: cleanedColumnId, old_column_id: cleanedOldColumnId, task_id: cleanedTaskId, title, description, due_date },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
     return response.data;
@@ -53,33 +68,17 @@ export async function updateTask({ board_id, column_id, task_id, title, descript
 
 export async function deleteTask({ board_id, column_id, task_id }) {
   try {
+    const cleanedBoardId = board_id.toString().replace('col-', '');
+    const cleanedColumnId = column_id.toString().replace('col-', '');
+    const cleanedTaskId = task_id.toString().replace('card-', '');
+
     const response = await axios.delete(`${VITE_API_URL}/tasks`, {
       headers: { Authorization: `Bearer ${getToken()}` },
-      data: { board_id, column_id, task_id },
+      data: { board_id: cleanedBoardId, column_id: cleanedColumnId, task_id: cleanedTaskId },
     });
     return response.data;
   } catch (error) {
     console.error("Erro ao deletar tarefa:", error);
-    throw error;
-  }
-}
-
-export async function updateTaskOrder(boardId, columnId, taskId, newColumnId, newPosition) {
-  try {
-    const response = await axios.put(
-      `${VITE_API_URL}/tasks/order`,
-      { 
-        board_id: boardId,
-        column_id: columnId,
-        task_id: taskId,
-        new_column_id: newColumnId,
-        new_position: newPosition
-      },
-      { headers: { Authorization: `Bearer ${getToken()}` } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Erro ao atualizar ordem da tarefa:", error);
     throw error;
   }
 }

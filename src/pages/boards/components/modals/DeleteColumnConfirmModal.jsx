@@ -1,6 +1,6 @@
 import styles from "./styles/deleteConfirmModal.module.css";
 
-const DeleteColumnConfirmModal = ({ columnName, onCancel, onConfirm }) => {
+const DeleteColumnConfirmModal = ({ columnName, onCancel, onConfirm, loading }) => {
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
@@ -9,11 +9,11 @@ const DeleteColumnConfirmModal = ({ columnName, onCancel, onConfirm }) => {
           Você tem certeza que deseja excluir <strong>{columnName}</strong>?
         </p>
         <div className={styles.actions}>
-          <button className={styles.cancelBtn} onClick={onCancel}>
+          <button className={styles.cancelBtn} onClick={onCancel} disabled={loading}>
             Cancelar
           </button>
-          <button className={styles.confirmBtn} onClick={onConfirm}>
-            Excluir
+          <button className={styles.confirmBtn} onClick={onConfirm} disabled={loading}>
+            {loading ? "Excluindo..." : "Excluir"}
           </button>
         </div>
       </div>

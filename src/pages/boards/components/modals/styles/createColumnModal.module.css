@@ -48,6 +48,32 @@
     border-radius: 8px;
     border: 1.5px solid #111;
     font-size: 1rem;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  input:focus {
+    outline: none;
+    border-color: #3a86ff;
+    box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+  }
+  
+  .inputError {
+      border-color: #ff4d4f !important;
+      box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+  }
+  
+  .inputError:focus {
+      border-color: #ff4d4f !important;
+      box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+  }
+  
+  .errorMessage {
+      color: #ff4d4f;
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+      margin-bottom: 0.5rem;
+      display: block;
+      font-weight: 500;
   }
   
   .buttonGroup {
@@ -65,6 +91,11 @@
     cursor: pointer;
     background-color: #3a86ff;
     color: white;
+  }
+  
+  button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
   }
   
   .cancelBtn {

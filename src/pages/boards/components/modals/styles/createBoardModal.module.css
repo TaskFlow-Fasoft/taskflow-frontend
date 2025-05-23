@@ -54,6 +54,32 @@
     border-radius: 8px;
     background-color: #f9f9f9;
     box-sizing: border-box;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .formGroup input:focus,
+  .formGroup textarea:focus {
+    outline: none;
+    border-color: #3a86ff;
+    box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+  }
+  
+  .inputError {
+      border-color: #ff4d4f !important;
+      box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+  }
+  
+  .inputError:focus {
+      border-color: #ff4d4f !important;
+      box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+  }
+  
+  .errorMessage {
+      color: #ff4d4f;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+      display: block;
+      font-weight: 500;
   }
   
   .formGroup textarea {
@@ -87,6 +113,11 @@
   
   .createButton:hover {
     background-color: #2769d1;
+  }
+  
+  .createButton:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
   }
   
   .cancelButton {

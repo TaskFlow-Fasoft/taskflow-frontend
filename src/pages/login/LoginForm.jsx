@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./styles/styles.module.css";
-import { login } from "../../services/authService";
+import { login } from "../../api/authService";
 import RegisterModal from "./RegisterModal"; // Importa o modal de registro
-import { register } from "../../services/registerService";
+import { register } from "../../api/registerService";
 
 
 const LoginForm = () => {
@@ -36,6 +36,9 @@ const LoginForm = () => {
     if (response.success) {
       localStorage.setItem("access_token", response.access_token);
       localStorage.setItem("expires_at", response.expires_at);
+      if (response.username) {
+        localStorage.setItem("username", response.username);
+      }
       navigate("/boards");
     } else {
       setErrorMsg(response.message || "Falha na autenticação.");

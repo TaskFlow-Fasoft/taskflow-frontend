@@ -13,7 +13,6 @@
   background: white;
   border-radius: 15px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
   max-width: 900px;
   width: 100%;
   box-sizing: border-box;
@@ -260,3 +259,56 @@
     padding: 2rem;
   }
 }
+
+@media (max-width: 600px) {
+  .buttonsContainer {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .loginButton,
+  .registerButton {
+    width: 100%;
+  }
+
+  .loginForm {
+    padding: 0 1rem;
+  }
+}
+
+/* --- Novo: Media Query para telas muito pequenas com barra de rolagem --- */
+@media (max-width: 400px) {
+  .loginContainer {
+    height: auto;
+    min-height: 100vh;
+    padding: 1rem 0.5rem;
+  }
+
+  .loginContent {
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 95vh;
+    padding: 1rem;
+  }
+
+  .formSection {
+    padding: 1.5rem 1rem;
+  }
+
+  .logoSection {
+    padding: 1.5rem 1rem;
+  }
+
+  .buttonsContainer {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .loginButton,
+  .registerButton {
+    width: 100%;
+  }
+}
+/* ---------------------------------------------------------------------- */
+
+/* ---------------------------------------------------- */

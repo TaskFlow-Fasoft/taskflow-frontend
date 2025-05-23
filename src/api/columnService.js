@@ -1,6 +1,6 @@
-// src/services/columnService.js
+// src/api/columnService.js
 import axios from "axios";
-import { VITE_API_URL } from "../config";
+import { VITE_API_URL } from "../config/config";
 import { getTasks } from "./taskService";
 
 export async function createColumn(boardId, title) {
@@ -25,7 +25,7 @@ export async function createColumn(boardId, title) {
           success: true,
           column: {
             id: String(response.data.id),
-            name: response.data.title, // converte para 'name' porque o front usa isso
+            title: response.data.title,
             cards: []
           }
         };
@@ -48,10 +48,13 @@ export async function createColumn(boardId, title) {
     const token = localStorage.getItem("access_token");
   
     try {
+      const cleanedBoardId = boardId.toString().replace('col-', '');
+      const cleanedColumnId = columnId.toString().replace('col-', '');
+
       const response = await axios.put(
-        `${VITE_API_URL}/column/${boardId}`,
+        `${VITE_API_URL}/column/${cleanedBoardId}`,
         {
-          column_id: columnId,
+          column_id: cleanedColumnId,
           title
         },
         {
@@ -82,12 +85,13 @@ export async function createColumn(boardId, title) {
     const token = localStorage.getItem("access_token");
   
     try {
+      const cleanedColumnId = columnId.replace('col-', '');
       const response = await axios.delete(`${VITE_API_URL}/column`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
         data: {
-          id: columnId,
+          id: cleanedColumnId,
           board_id: boardId
         }
       });
@@ -109,44 +113,44 @@ export async function createColumn(boardId, title) {
     }
   }
 
-  export const getBoardColumns = async (boardId) => {
-    const token = localStorage.getItem("access_token");
-  
+  const getToken = () => localStorage.getItem("access_token");
+
+  export async function getBoardColumns(boardId) {
     try {
-      const response = await axios.get(`${VITE_API_URL}/column/${boardId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const columnsData = await axios.get(`${VITE_API_URL}/column/${boardId}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
-  
-      if (response.status === 200) {
-        const rawColumns = response.data.columns || [];
-  
-        const enrichedColumns = await Promise.all(
-          rawColumns.map(async (col) => {
-            const tasks = await getTasks(boardId, col.id);
-  
+
+      const columns = columnsData.data.columns || [];
+
+      const columnsWithTasks = await Promise.all(
+        columns.map(async (column) => {
+          try {
+            const tasks = await getTasks(boardId, column.id);
             return {
-              id: String(col.id),
-              name: col.title,
-              cards: tasks.map((task) => ({
-                id: String(task.id),
-                title: task.title,
-                description: task.description,
-                dueDate: task.due_date,
-                createdAt: task.created_at,
-              })),
+              ...column,
+              cards: tasks || []
             };
-          })
-        );
-  
-        return enrichedColumns;
-      } else {
-        return [];
-      }
+          } catch (taskError) {
+            console.error(`Erro ao buscar tasks para a coluna ${column.id}:`, taskError.response?.data || taskError.message);
+            return { ...column, cards: [] };
+          }
+        })
+      );
+
+      // Ordenar colunas por data de criação (mais antiga primeiro)
+      columnsWithTasks.sort((a, b) => {
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+
+      // Retorna os dados ordenados
+      return columnsWithTasks;
+
     } catch (error) {
-      console.error("Erro ao buscar colunas:", error);
-      return [];
+      console.error("Erro ao buscar colunas:", error.response?.data || error.message);
+      throw error;
     }
-  };
+  }
   
   
 

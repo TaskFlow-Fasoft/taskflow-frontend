@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./styles/registerModal.module.css";
-import { register } from "../../services/registerService";
+import { register } from "../../api/registerService";
 
 const RegisterModal = ({ onClose }) => {
   const [name, setName] = useState("");
