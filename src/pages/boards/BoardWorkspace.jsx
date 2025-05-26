@@ -509,6 +509,7 @@ const BoardWorkspace = () => {
         setCardToDelete(null);
         setShowDeleteCardConfirmModal(false);
         setShowCreateCardModal(false); // Fecha o modal de edição/criação se aberto
+        setCardToEdit(null); // Limpa o estado de edição
         return;
     }
 
@@ -523,6 +524,7 @@ const BoardWorkspace = () => {
         setCardToDelete(null);
         setShowDeleteCardConfirmModal(false);
         setShowCreateCardModal(false);
+        setCardToEdit(null); // Limpa o estado de edição
         return;
     }
   
@@ -550,6 +552,7 @@ const BoardWorkspace = () => {
       setCardToDelete(null);
       setShowDeleteCardConfirmModal(false);
       setShowCreateCardModal(false); // Garante que ambos modais fecham
+      setCardToEdit(null); // Limpa o estado de edição
       setIsDeletingCard(false);
     }
   };  
