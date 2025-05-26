@@ -151,8 +151,3 @@ export async function createColumn(boardId, title) {
       throw error;
     }
   }
-  
-  
-
-  
-  
