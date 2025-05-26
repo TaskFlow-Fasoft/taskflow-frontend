@@ -29,15 +29,15 @@ const CreateColumnModal = ({ isOpen, onClose, onSave }) => {
         <form onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <label htmlFor="columnName">Nome da Coluna</label>
-            <input
-              type="text"
-              id="columnName"
-              value={columnName}
-              onChange={(e) => setColumnName(e.target.value)}
-              placeholder="Digite o nome da coluna"
+          <input
+            type="text"
+            id="columnName"
+            value={columnName}
+            onChange={(e) => setColumnName(e.target.value)}
+            placeholder="Digite o nome da coluna"
               disabled={isSaving}
               required
-            />
+          />
           </div>
           <div className={styles.buttonGroup}>
             <button
@@ -62,4 +62,4 @@ const CreateColumnModal = ({ isOpen, onClose, onSave }) => {
   );
 };
 
-export default CreateColumnModal; 
+export default CreateColumnModal;

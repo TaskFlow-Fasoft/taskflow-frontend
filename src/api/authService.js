@@ -1,8 +1,31 @@
 // src/api/authService.js
 
 import axios from 'axios';
+import { VITE_API_URL } from "../config/config";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL; // ajuste conforme o backend
+// Função para verificar se o token está expirado
+export const isTokenExpired = () => {
+  const expiresAt = localStorage.getItem('expires_at');
+  if (!expiresAt) return true;
+
+  const expirationTime = new Date(expiresAt).getTime();
+  const currentTime = new Date().getTime();
+
+  return currentTime >= expirationTime;
+};
+
+// Função para limpar os dados de autenticação
+export const clearAuthData = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('expires_at');
+  localStorage.removeItem('username');
+};
+
+// Função para verificar se o usuário está autenticado
+export const isAuthenticated = () => {
+  const token = localStorage.getItem('access_token');
+  return token && !isTokenExpired();
+};
 
 export const login = async (email, password) => {
   try {
@@ -11,11 +34,15 @@ export const login = async (email, password) => {
 
     // Verifica se a resposta foi bem-sucedida
     if (response.status === 200) {
+      // Calcula a data de expiração (24 horas a partir de agora)
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
+
       // Retorna a resposta com os dados do token e usuário
       return {
         success: true,
         access_token: response.data.access_token,
-        expires_at: response.data.expires_at,
+        expires_at: expiresAt.toISOString(),
         username: response.data.username
       };
     } else {
@@ -34,3 +61,15 @@ export const login = async (email, password) => {
     };
   }
 };
+
+// Interceptor para verificar token expirado
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 || isTokenExpired()) {
+      clearAuthData();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
