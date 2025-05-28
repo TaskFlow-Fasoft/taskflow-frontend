@@ -1,4 +1,3 @@
-// src/api/columnService.js
 import axios from "axios";
 import { VITE_API_URL } from "../config/config";
 import { getTasks } from "./taskService";
@@ -36,7 +35,6 @@ export async function createColumn(boardId, title) {
         };
       }
     } catch (error) {
-      console.error("Erro ao criar coluna:", error);
       return {
         success: false,
         message: error.response?.data?.detail || "Erro inesperado"
@@ -73,7 +71,6 @@ export async function createColumn(boardId, title) {
         };
       }
     } catch (error) {
-      console.error("Erro ao renomear coluna:", error);
       return {
         success: false,
         message: error.response?.data?.detail || "Erro inesperado"
@@ -105,7 +102,6 @@ export async function createColumn(boardId, title) {
         };
       }
     } catch (error) {
-      console.error("Erro ao deletar coluna:", error);
       return {
         success: false,
         message: error.response?.data?.detail || "Erro inesperado"
@@ -132,22 +128,18 @@ export async function createColumn(boardId, title) {
               cards: tasks || []
             };
           } catch (taskError) {
-            console.error(`Erro ao buscar tasks para a coluna ${column.id}:`, taskError.response?.data || taskError.message);
             return { ...column, cards: [] };
           }
         })
       );
 
-      // Ordenar colunas por data de criação (mais antiga primeiro)
       columnsWithTasks.sort((a, b) => {
         return new Date(a.created_at) - new Date(b.created_at);
       });
 
-      // Retorna os dados ordenados
       return columnsWithTasks;
 
     } catch (error) {
-      console.error("Erro ao buscar colunas:", error.response?.data || error.message);
       throw error;
     }
   }

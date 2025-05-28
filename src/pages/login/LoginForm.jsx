@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./styles/styles.module.css";
 import { login, isAuthenticated } from "../../api/authService";
-import RegisterModal from "./RegisterModal"; // Importa o modal de registro
+import RegisterModal from "./RegisterModal"; 
 import { register } from "../../api/registerService";
 
 
@@ -11,13 +11,12 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false); // Controla visibilidade do modal
+  const [showModal, setShowModal] = useState(false); 
   const [registerErrorMsg, setRegisterErrorMsg] = useState("");
   const [registerSuccessMsg, setRegisterSuccessMsg] = useState("");
 
   const navigate = useNavigate();
 
-  // Redireciona apenas se o usuário estiver autenticado e o token for válido
   useEffect(() => {
     if (isAuthenticated()) {
       navigate("/boards");
@@ -41,11 +40,11 @@ const LoginForm = () => {
         navigate("/boards");
       } else {
         setErrorMsg(response.message || "Falha na autenticação.");
-        setPassword(""); // Limpa a senha em caso de erro
+        setPassword(""); 
       }
     } catch {
       setErrorMsg("Erro ao tentar fazer login. Tente novamente.");
-      setPassword(""); // Limpa a senha em caso de erro
+      setPassword(""); 
     } finally {
       setLoading(false);
     }
@@ -57,11 +56,11 @@ const LoginForm = () => {
     
     if (response.success) {
       setRegisterSuccessMsg(response.message);
-      setRegisterErrorMsg("");  // Limpa qualquer erro anterior
-      setShowModal(false);  // Fecha o modal após o sucesso
+      setRegisterErrorMsg(""); 
+      setShowModal(false);
     } else {
       setRegisterErrorMsg(response.message || "Erro no cadastro.");
-      setRegisterSuccessMsg("");  // Limpa qualquer mensagem de sucesso anterior
+      setRegisterSuccessMsg("");  
     }
   };
 

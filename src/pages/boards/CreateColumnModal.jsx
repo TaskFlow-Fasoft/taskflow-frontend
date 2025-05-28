@@ -12,9 +12,8 @@ const CreateColumnModal = ({ isOpen, onClose, onSave }) => {
     setIsSaving(true);
     try {
       await onSave(columnName);
-      onClose(); // Apenas fecha o modal após o sucesso
+      onClose(); 
     } catch (error) {
-      console.error("Erro ao criar coluna:", error);
     } finally {
       setIsSaving(false);
     }
