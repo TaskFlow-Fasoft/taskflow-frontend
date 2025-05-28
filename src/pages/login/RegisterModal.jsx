@@ -22,7 +22,7 @@ const RegisterModal = ({ onClose }) => {
 
     if (response.success) {
       setTimeout(() => {
-        onClose(); // Fecha o modal após 2s
+        onClose();
       }, 2000);
     }
   };

@@ -20,10 +20,9 @@ const CreateBoardModal = ({ onClose, onCreate, loading }) => {
       return;
     }
   
-    // Criar o novo quadro com colunas vazias
     onCreate({ 
       name: name.trim(),
-      columns: [] // Adicionando uma lista de colunas vazias para o quadro
+      columns: [] 
     });
   };
 

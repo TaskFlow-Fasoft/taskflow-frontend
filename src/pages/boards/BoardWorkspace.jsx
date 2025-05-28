@@ -49,8 +49,8 @@ const BoardWorkspace = () => {
   const [deleteIndex, setDeleteIndex] = useState(null);
   const [showCreateColumnModal, setShowCreateColumnModal] = useState(false);
   const [showRenameColumnModal, setShowRenameColumnModal] = useState(false);
-  const [columnToRename, setColumnToRename] = useState(null); // index ou id
-  const [columnMenu, setColumnMenu] = useState(null); // { columnId, index, top, left }
+  const [columnToRename, setColumnToRename] = useState(null);
+  const [columnMenu, setColumnMenu] = useState(null);
   const [showDeleteColumnModal, setShowDeleteColumnModal] = useState(false);
   const [columnToDeleteIndex, setColumnToDeleteIndex] = useState(null);
   const [showCreateCardModal, setShowCreateCardModal] = useState(false);
@@ -162,7 +162,6 @@ const BoardWorkspace = () => {
     const column = board.columns[columnToDeleteIndex];
   
     if (!board || !column) {
-        console.error("Erro: Quadro ou coluna inválido ao excluir coluna.");
         toast.error("Erro interno ao tentar excluir coluna. Por favor, tente novamente.");
         setShowDeleteColumnModal(false);
         setColumnMenu(null);
@@ -187,7 +186,6 @@ const BoardWorkspace = () => {
           toast.error(result.message || "Erro ao excluir coluna.");
         }
     } catch (error) {
-        console.error("Erro ao excluir coluna:", error);
         toast.error("Erro ao excluir coluna.");
     } finally {
         setShowDeleteColumnModal(false);
@@ -198,21 +196,19 @@ const BoardWorkspace = () => {
 
 
   const openRenameColumnModal = (colIndex) => {
-    const currentBoardIndex = selectedBoardIndex; // Captura o índice atual
-    if (currentBoardIndex === null) return; // Garante que há um quadro selecionado
+    const currentBoardIndex = selectedBoardIndex;
+    if (currentBoardIndex === null) return;
 
     setColumnToRename(colIndex);
     setShowRenameColumnModal(true);
-    setColumnMenu(null); // Fecha o menu da coluna ao abrir o modal de renomear
+    setColumnMenu(null); 
   };
 
   const handleConfirmRenameColumn = async (newName) => {
-    const currentBoardIndex = selectedBoardIndex; // Captura o índice do quadro
-    const colIndex = columnToRename; // Captura o índice da coluna
+    const currentBoardIndex = selectedBoardIndex; 
+    const colIndex = columnToRename;
 
-    // Adiciona verificação para garantir que os índices são válidos
     if (currentBoardIndex === null || colIndex === null || !boards[currentBoardIndex] || !boards[currentBoardIndex].columns[colIndex]) {
-        console.error("Erro: selectedBoardIndex ou columnToRename inválido ao renomear coluna.");
         toast.error("Erro interno ao tentar renomear coluna. Por favor, tente novamente.");
         setShowRenameColumnModal(false);
         return;
@@ -228,7 +224,6 @@ const BoardWorkspace = () => {
     if (result.success) {
       setBoards((prev) => {
         const updated = structuredClone(prev);
-        // Usa os índices capturados para atualizar o estado
         updated[currentBoardIndex].columns[colIndex].title = newName;
         return updated;
       });
@@ -254,17 +249,14 @@ const BoardWorkspace = () => {
         setBoards((prev) => [...prev, result.board]);
         toast.success("Quadro criado com sucesso!");
       } else {
-        // Handle API errors
-        console.error(result.message);
         toast.error(result.message || "Erro ao criar quadro.");
       }
     } catch (error) {
-        console.error("Erro ao criar quadro:", error);
         const errorMessage = error.response?.data?.detail || "Erro ao criar quadro.";
         toast.error(errorMessage);
     } finally {
         setIsCreatingBoard(false);
-        setShowModal(false); // Fechar modal no finally
+        setShowModal(false);
     }
   };
   
@@ -312,7 +304,6 @@ const BoardWorkspace = () => {
           toast.error(result.message || "Erro ao excluir quadro.");
         }
     } catch (error) {
-        console.error("Erro ao excluir quadro:", error);
         toast.error("Erro ao excluir quadro.");
     } finally {
         setShowDeleteModal(false);
@@ -353,7 +344,7 @@ const BoardWorkspace = () => {
   };
 
   const handleCreateColumn = async (columnName) => {
-    if (selectedBoardIndex === null) return; // Added null check here too
+    if (selectedBoardIndex === null) return; 
 
     const board = boards[selectedBoardIndex];
 
@@ -377,21 +368,17 @@ const BoardWorkspace = () => {
 
         toast.success("Coluna criada com sucesso!");
       } else {
-        // Handle API errors even if result.success is false
         const errorMessage = result.message || "Erro desconhecido ao criar coluna.";
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Erro ao criar coluna:", error);
       const errorMessage = error.response?.data?.detail || "Erro ao criar coluna.";
       toast.error(errorMessage);
     } finally {
       setIsCreatingColumn(false);
-      setShowCreateColumnModal(false); // Fechar modal no finally
+      setShowCreateColumnModal(false); 
     }
-  };
-  
-
+  }; 
 
   const handleCreateCardClick = (colIndex) => {
     setColumnToAddCard(colIndex);
@@ -405,7 +392,6 @@ const BoardWorkspace = () => {
     setIsSavingCard(true);
 
     try {
-      // Validação do título
       if (!cardData.title || cardData.title.trim() === '') {
         toast.error('O título do cartão é obrigatório');
         setIsSavingCard(false);
@@ -413,7 +399,6 @@ const BoardWorkspace = () => {
       }
 
       if (cardData.id) {
-        console.log("Attempting to update card with payload:", cardData);
         let columnIndex = cardData.columnIndex;
         if (columnIndex === undefined || columnIndex === null) {
           columnIndex = board.columns.findIndex((col) =>
@@ -426,7 +411,7 @@ const BoardWorkspace = () => {
           return;
         }
         
-        const currentColumnId = board.columns[columnIndex].id; // ID da coluna atual no frontend
+        const currentColumnId = board.columns[columnIndex].id;
 
         const payload = {
           board_id: Number(board.id.toString().replace('col-', '')),
@@ -437,8 +422,6 @@ const BoardWorkspace = () => {
           description: cardData.description,
           due_date: cardData.dueDate === '' ? null : cardData.dueDate,
         };
-
-        console.log("Sending updateTask payload:", payload);
 
         await updateTask(payload);
   
@@ -485,7 +468,6 @@ const BoardWorkspace = () => {
       setCardToEdit(null);
       setShowCreateCardModal(false);
     } catch (error) {
-      console.error("Erro ao salvar cartão:", error);
       const errorMessage = error.response?.data?.detail || "Erro ao salvar o cartão.";
       toast.error(errorMessage);
     } finally {
@@ -502,14 +484,12 @@ const BoardWorkspace = () => {
   };
 
   const confirmDeleteCard = async () => {
-    // Verifica se cardToDelete e seus campos essenciais existem
     if (!cardToDelete || cardToDelete.columnIndex === undefined || cardToDelete.id === undefined) {
-        console.error("Erro: Dados do cartão inválidos para exclusão.");
         toast.error("Erro interno ao tentar excluir cartão. Por favor, tente novamente.");
         setCardToDelete(null);
         setShowDeleteCardConfirmModal(false);
-        setShowCreateCardModal(false); // Fecha o modal de edição/criação se aberto
-        setCardToEdit(null); // Limpa o estado de edição
+        setShowCreateCardModal(false);
+        setCardToEdit(null);
         return;
     }
 
@@ -517,14 +497,12 @@ const BoardWorkspace = () => {
     const board = updatedBoards[selectedBoardIndex];
     const columnIndex = cardToDelete.columnIndex;
 
-    // Verifica se board e column existem
      if (!board || !board.columns || !board.columns[columnIndex]) {
-        console.error("Erro: Quadro ou coluna inválido para exclusão do cartão.");
         toast.error("Erro interno ao tentar excluir cartão. Por favor, tente novamente.");
         setCardToDelete(null);
         setShowDeleteCardConfirmModal(false);
         setShowCreateCardModal(false);
-        setCardToEdit(null); // Limpa o estado de edição
+        setCardToEdit(null); 
         return;
     }
   
@@ -534,7 +512,7 @@ const BoardWorkspace = () => {
       const payload = {
         board_id: Number(board.id.toString().replace('col-', '')),
         column_id: Number(board.columns[columnIndex].id.replace('col-', '')),
-        task_id: Number(cardToDelete.id.toString().replace('card-', '')), // Garante que ID é número sem prefixo
+        task_id: Number(cardToDelete.id.toString().replace('card-', '')), 
       };
   
       await deleteTask(payload);
@@ -546,13 +524,12 @@ const BoardWorkspace = () => {
       setBoards(updatedBoards);
       toast.success("Cartão excluído com sucesso!");
     } catch (error) {
-      console.error("Erro ao excluir cartão:", error);
       toast.error("Erro ao excluir o cartão.");
     } finally {
       setCardToDelete(null);
       setShowDeleteCardConfirmModal(false);
-      setShowCreateCardModal(false); // Garante que ambos modais fecham
-      setCardToEdit(null); // Limpa o estado de edição
+      setShowCreateCardModal(false); 
+      setCardToEdit(null); 
       setIsDeletingCard(false);
     }
   };  
@@ -568,7 +545,6 @@ const BoardWorkspace = () => {
     const updatedBoards = structuredClone(boards);
     const board = updatedBoards[selectedBoardIndex];
 
-    // IDs puros (números)
     const sourceColId = Number(source.droppableId.replace('col-', ''));
     const destColId = Number(destination.droppableId.replace('col-', ''));
 
@@ -587,39 +563,30 @@ const BoardWorkspace = () => {
     const [movedCard] = sourceCol.cards.splice(source.index, 1);
     if (!movedCard) return;
 
+    movedCard.column_id = Number(destColId); 
+
     destCol.cards.splice(destination.index, 0, movedCard);
 
     setBoards(updatedBoards);
 
-    // Só atualiza no backend se mudou de coluna
+
     if (sourceColId !== destColId) {
       try {
-        console.log('Card sendo movido (do estado do frontend ANTES do move visual):', movedCard);
-        console.log('source.droppableId (coluna de origem na UI):', source.droppableId);
-
         const cardId = Number(movedCard.id.replace('card-', ''));
-
-        // Novo: Usar movedCard.column_id se disponível
-        const oldColumnIdToSend = movedCard.column_id
-          ? Number(movedCard.column_id.toString().replace('col-', '')) // Garantir que é string antes de replace
-          : sourceColId;
-
-        console.log('Usando old_column_id para enviar:', oldColumnIdToSend);
+        const oldColumnIdToSend = Number(source.droppableId.replace('col-', ''));
 
         await updateTask({
           board_id: Number(board.id),
           task_id: cardId,
           old_column_id: oldColumnIdToSend,
-          column_id: destColId,
+          column_id: Number(destColId), 
           title: movedCard.title ?? '',
           description: movedCard.description ?? '',
           due_date: movedCard.dueDate ?? null,
         });
       } catch (error) {
-        console.error('Erro detalhado ao mover o card:', error.response?.data || error.message);
         const errorMessage = error.response?.data?.detail || 'Erro desconhecido ao mover o card.';
         toast.error(`Não foi possível mover o card: ${errorMessage}`);
-        // Reverte no front se der erro
         const revertedBoards = structuredClone(boards);
         setBoards(revertedBoards);
       }
@@ -631,19 +598,16 @@ const BoardWorkspace = () => {
   
     const board = boards[index];
     const columns = await getBoardColumns(board.id);
-  
-    console.log("Colunas recebidas do backend:", columns);
+
   
     const normalizedColumns = columns.map((col) => ({
       ...col,
-      id: `col-${col.id}`, // Prefixo para garantir que é uma string única
+      id: `col-${col.id}`, 
       cards: col.cards?.map((card) => ({
         ...card,
-        id: `card-${card.id}`, // Prefixo para garantir que é uma string única
+        id: `card-${card.id}`,
       })) || [],
     }));
-  
-    console.log("Colunas normalizadas:", normalizedColumns);
   
     setBoards((prevBoards) => {
       const updated = [...prevBoards];
@@ -828,7 +792,6 @@ const BoardWorkspace = () => {
                   {boards[selectedBoardIndex]?.columns?.length > 0 ? (
                     <>
                       {boards[selectedBoardIndex].columns.map((column, colIndex) => {
-                        console.log("Rendering column:", JSON.stringify(column));
                         return (
                           <Droppable droppableId={column.id} key={column.id}>
                             {(provided) => (
@@ -881,8 +844,7 @@ const BoardWorkspace = () => {
                                 <div className={styles.columnContent}>
                                   {column.cards?.length > 0 ? (
                                     column.cards.map((card, cardIndex) => {
-                                      if (!card) return null; // Skip undefined cards
-                                      console.log("Rendering card:", JSON.stringify(card));
+                                      if (!card) return null; 
                                       return (
                                         <Draggable draggableId={card.id} index={cardIndex} key={card.id}>
                                           {(provided) => (

@@ -14,11 +14,9 @@ const RenameBoardModal = ({ boardName, onClose, onConfirm, loading }) => {
       return true;
   };
 
-  // 🔑 Atalhos de teclado
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Enter") {
-        // Validar antes de confirmar com Enter
         if (validateName(name)) {
           onConfirm(name.trim());
         }

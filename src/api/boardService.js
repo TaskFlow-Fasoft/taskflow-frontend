@@ -22,8 +22,8 @@ export async function getBoards() {
 
           const columns = rawColumns.map((col) => ({
             id: String(col.id),
-            name: col.title, // converte de 'title' para 'name'
-            cards: [] // cards ainda não vêm, então iniciamos vazio
+            name: col.title, 
+            cards: [] 
           }));
 
           return {
@@ -33,7 +33,6 @@ export async function getBoards() {
             columns
           };
         } catch (err) {
-          console.error(`Erro ao buscar colunas do board ${board.id}:`, err);
           return {
             ...board,
             id: String(board.id),
@@ -46,7 +45,6 @@ export async function getBoards() {
 
     return boardsWithColumns;
   } catch (error) {
-    console.error("Erro ao buscar quadros:", error);
     return [];
   }
 }
@@ -78,7 +76,6 @@ export async function createBoard(title) {
       };
     }
   } catch (error) {
-    console.error("Erro ao criar quadro:", error);
     return {
       success: false,
       message: error.response?.data?.detail || "Erro ao criar quadro"
@@ -102,7 +99,6 @@ export async function deleteBoard(boardId) {
       return { success: false, message: response.data.message || "Falha ao excluir." };
     }
   } catch (error) {
-    console.error("Erro ao deletar board:", error);
     return {
       success: false,
       message: error.response?.data?.detail || "Erro inesperado."
@@ -132,7 +128,6 @@ export async function updateBoard(boardId, newTitle) {
       };
     }
   } catch (error) {
-    console.error("Erro ao renomear quadro:", error);
     return {
       success: false,
       message: error.response?.data?.detail || "Erro inesperado ao atualizar quadro."

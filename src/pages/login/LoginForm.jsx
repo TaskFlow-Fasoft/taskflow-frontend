@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./styles/styles.module.css";
-import { login } from "../../api/authService";
-import RegisterModal from "./RegisterModal"; // Importa o modal de registro
+import { login, isAuthenticated } from "../../api/authService";
+import RegisterModal from "./RegisterModal"; 
 import { register } from "../../api/registerService";
 
 
@@ -11,40 +11,43 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false); // Controla visibilidade do modal
+  const [showModal, setShowModal] = useState(false); 
   const [registerErrorMsg, setRegisterErrorMsg] = useState("");
   const [registerSuccessMsg, setRegisterSuccessMsg] = useState("");
 
   const navigate = useNavigate();
 
-  // Redireciona se já estiver logado
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      // Evita o loop, redireciona apenas se necessário
+    if (isAuthenticated()) {
       navigate("/boards");
     }
-  }, [navigate]); // Dependência no "navigate" e não no estado
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
 
-    const response = await login(email, password);
+    try {
+      const response = await login(email, password);
 
-    if (response.success) {
-      localStorage.setItem("access_token", response.access_token);
-      localStorage.setItem("expires_at", response.expires_at);
-      if (response.username) {
-        localStorage.setItem("username", response.username);
+      if (response.success) {
+        localStorage.setItem("access_token", response.access_token);
+        localStorage.setItem("expires_at", response.expires_at);
+        if (response.username) {
+          localStorage.setItem("username", response.username);
+        }
+        navigate("/boards");
+      } else {
+        setErrorMsg(response.message || "Falha na autenticação.");
+        setPassword(""); 
       }
-      navigate("/boards");
-    } else {
-      setErrorMsg(response.message || "Falha na autenticação.");
+    } catch {
+      setErrorMsg("Erro ao tentar fazer login. Tente novamente.");
+      setPassword(""); 
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   
@@ -53,11 +56,11 @@ const LoginForm = () => {
     
     if (response.success) {
       setRegisterSuccessMsg(response.message);
-      setRegisterErrorMsg("");  // Limpa qualquer erro anterior
-      setShowModal(false);  // Fecha o modal após o sucesso
+      setRegisterErrorMsg(""); 
+      setShowModal(false);
     } else {
       setRegisterErrorMsg(response.message || "Erro no cadastro.");
-      setRegisterSuccessMsg("");  // Limpa qualquer mensagem de sucesso anterior
+      setRegisterSuccessMsg("");  
     }
   };
 
