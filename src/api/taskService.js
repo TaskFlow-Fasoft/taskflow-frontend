@@ -30,8 +30,14 @@ export async function getTasks(boardId, columnId) {
       `${VITE_API_URL}/tasks?board_id=${boardId}&column_id=${columnId}`,
       { headers: { Authorization: `Bearer ${getToken()}` } }
     );
-    return response.data.tasks;
+    return response.data.tasks || [];
   } catch (error) {
+    // Se for erro 400, provavelmente é uma coluna vazia, retorna array vazio
+    if (error.response?.status === 400) {
+      console.log(`Coluna ${columnId} está vazia ou não encontrada`);
+      return [];
+    }
+    
     console.error("Erro ao buscar tarefas:", error.response?.data || error.message);
     return [];
   }
