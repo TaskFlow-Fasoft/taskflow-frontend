@@ -18,7 +18,6 @@ const CreateColumnModal = ({ onClose, onCreate, loading }) => {
     e.preventDefault();
     if (validateColumnName(columnName)) {
       onCreate(columnName.trim());
-      setColumnName("");
     }
   };
 
