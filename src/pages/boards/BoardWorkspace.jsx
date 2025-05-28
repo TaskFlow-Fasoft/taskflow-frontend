@@ -587,6 +587,9 @@ const BoardWorkspace = () => {
     const [movedCard] = sourceCol.cards.splice(source.index, 1);
     if (!movedCard) return;
 
+    // Atualiza a column_id do card no estado local imediatamente após a movimentação visual
+    movedCard.column_id = Number(destColId); // Use o ID numérico sem prefixo para consistência com o payload da API
+
     destCol.cards.splice(destination.index, 0, movedCard);
 
     setBoards(updatedBoards);
@@ -599,10 +602,8 @@ const BoardWorkspace = () => {
 
         const cardId = Number(movedCard.id.replace('card-', ''));
 
-        // Novo: Usar movedCard.column_id se disponível
-        const oldColumnIdToSend = movedCard.column_id
-          ? Number(movedCard.column_id.toString().replace('col-', '')) // Garantir que é string antes de replace
-          : sourceColId;
+        // Usar source.droppableId para old_column_id, que reflete a coluna de onde o card foi arrastado
+        const oldColumnIdToSend = Number(source.droppableId.replace('col-', ''));
 
         console.log('Usando old_column_id para enviar:', oldColumnIdToSend);
 
@@ -610,7 +611,7 @@ const BoardWorkspace = () => {
           board_id: Number(board.id),
           task_id: cardId,
           old_column_id: oldColumnIdToSend,
-          column_id: destColId,
+          column_id: Number(destColId), // Garante que o ID é numérico
           title: movedCard.title ?? '',
           description: movedCard.description ?? '',
           due_date: movedCard.dueDate ?? null,
