@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./styles/styles.module.css";
-import { login } from "../../api/authService";
+import { login, isAuthenticated } from "../../api/authService";
 import RegisterModal from "./RegisterModal"; // Importa o modal de registro
 import { register } from "../../api/registerService";
 
@@ -17,34 +17,38 @@ const LoginForm = () => {
 
   const navigate = useNavigate();
 
-  // Redireciona se já estiver logado
+  // Redireciona apenas se o usuário estiver autenticado e o token for válido
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      // Evita o loop, redireciona apenas se necessário
+    if (isAuthenticated()) {
       navigate("/boards");
     }
-  }, [navigate]); // Dependência no "navigate" e não no estado
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
 
-    const response = await login(email, password);
+    try {
+      const response = await login(email, password);
 
-    if (response.success) {
-      localStorage.setItem("access_token", response.access_token);
-      localStorage.setItem("expires_at", response.expires_at);
-      if (response.username) {
-        localStorage.setItem("username", response.username);
+      if (response.success) {
+        localStorage.setItem("access_token", response.access_token);
+        localStorage.setItem("expires_at", response.expires_at);
+        if (response.username) {
+          localStorage.setItem("username", response.username);
+        }
+        navigate("/boards");
+      } else {
+        setErrorMsg(response.message || "Falha na autenticação.");
+        setPassword(""); // Limpa a senha em caso de erro
       }
-      navigate("/boards");
-    } else {
-      setErrorMsg(response.message || "Falha na autenticação.");
+    } catch {
+      setErrorMsg("Erro ao tentar fazer login. Tente novamente.");
+      setPassword(""); // Limpa a senha em caso de erro
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   

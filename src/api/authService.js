@@ -57,7 +57,7 @@ export const login = async (email, password) => {
     console.error('Erro ao tentar fazer login:', error);
     return {
       success: false,
-      message: error.response ? error.response.data.message : 'Erro ao tentar fazer login.'
+      message: error.response?.data?.message || 'Email ou senha incorretos.'
     };
   }
 };
@@ -66,6 +66,12 @@ export const login = async (email, password) => {
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Não redireciona se for uma requisição de login
+    if (error.config.url.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+
+    // Redireciona apenas se não for login e o token estiver expirado
     if (error.response?.status === 401 || isTokenExpired()) {
       clearAuthData();
       window.location.href = '/login';
